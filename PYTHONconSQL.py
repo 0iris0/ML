@@ -3,7 +3,7 @@ connection = mysql.connector.connect(host="127.0.0.1",
                                      port="3306",
                                      user="root",
                                      password="12369",
-                                     database="practice")  # 也可加入資料庫參數database=""
+                                     database="practice")
 cursor = connection.cursor()
 
 # 創建practice資料庫
@@ -33,7 +33,7 @@ cursor.execute("INSERT INTO `hey` VALUES(9)")
 # 修改
 # cursor.execute("UPDATE `hey` SET `manger ID`=NULL WHERE `branch ID` =4;")
 
-# # 刪除
+# 刪除
 # cursor.execute("DELETE FROM `hey` WHERE `branch ID`=5;")
 
 cursor.close()
