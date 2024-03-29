@@ -28,17 +28,22 @@ knn.fit(x_train, y_train)
 # 預測
 pred = knn.predict(x_test).tolist()
 acc = accuracy_score(y_test, pred)
-print("準度:", acc)
+print("準度:", acc) #準度:1.0
 
-
+from sklearn.model_selection import cross_val_score #交叉驗證
+k_range=range(2,12)
+k_scores=[]
+for k in k_range:
+    knn_model=KNeighborsClassifier(n_neighbors=k)
+    accuracy=cross_val_score(knn_model,x_train,y_train,cv=10,scoring="accuracy")
+    print("k=",str(k), "accuracy=",str(accuracy.mean())
+    k_scores.append(accuracy.mean())
+    print("Best k=",max(k_scores))
+          
 # 視覺化
 plt.rc('font', family='Microsoft JhengHei')
-plt.scatter(x_train, y_train, color="green")
 plt.plot(x_train, knn.predict(x_train), color="blue")
 plt.title("專業影評人評分 vs IMBD評價")
 plt.xlabel("專業影評人評分")
 plt.ylabel("IMBD評價")
 plt.show()
-
-# 結果分析
-"""相關係數僅約0.005,雖然係數與相關性不見得是正比,但專業影評人打分每改變1分對IMBD分數影響極小"""
