@@ -5,8 +5,8 @@ DROP DATABASE `practice`;
 
 USE `sqlpractice`;
 CREATE TABLE `student`(
-`student_id` INT PRIMARY KEY,
-`name` VARCHAR(20),
+`student_id` INT PRIMARY KEY,  #AUTO_INCREMENT自動加1
+`name` VARCHAR(20),  #可新增限制NOT NULL, UNIQUE, DEFAULT 'x'
 `major` VARCHAR(20)
 );
 DESCRIBE `student`;
