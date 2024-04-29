@@ -1,0 +1,23 @@
+#DDL
+CREATE DATABASE `sqlpractice`;
+SHOW DATABASES;
+DROP DATABASE `practice`;
+
+
+
+
+#DML
+
+
+  
+
+
+#DQL
+
+
+
+
+
+
+
+#DCL
