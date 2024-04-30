@@ -124,7 +124,8 @@ SELECT*FROM `work_with`;
 員工id+員工名字union客戶id+客戶名字：SELECT `emp_id` AS `total_id`,`name` AS `total_name` FROM `employee` UNION SELECT `client_id`,`client_name` FROM `client`;
 員工薪水union銷售金額：SELECT `salary` AS `money` FROM `employee` UNION SELECT `total_sales` FROM `work_with`;
 所有部門經理名字：SELECT `emp_id`,`name`,`branch_name` FROM `employee` JOIN `branch` ON  `employee`.`emp_id`=`branch`.`manager_id`;
-
+研發部門經理名稱：SELECT `name` FROM `employee` WHERE `emp_id`=(SELECT `manager_id` FROM `branch` WHERE `branch_name`='研發');
+對單一客戶銷售超過50000的員工名字：SELECT `name` FROM `employee` WHERE `emp_id` IN(SELECT `emp_id` FROM `work_with` WHERE `total_sales`>50000);
 
 
 #DCL
