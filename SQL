@@ -45,11 +45,11 @@ WHERE `score`<60;
   
 
 #DQL
-
-
-
+SELECT `name`,`major` FROM `student` ORDER BY `score`;
 
 
 
 
 #DCL
+grant on
+deny on
