@@ -50,7 +50,7 @@ SELECT*FROM `student` WHERE `major` IN('英語','歷史','生物');
 group by
 having
 
-#自創表格練習，表格檔"SQL圖片"
+#自創表格練習，表格總覽檔名="SQL圖片"
 CREATE TABLE `employee`(
 `emp_id` INT PRIMARY KEY,
 `name` VARCHAR(20),
@@ -108,15 +108,7 @@ INSERT INTO `work_with` VALUES(208,403,24000);
 INSERT INTO `work_with` VALUES(210,404,87940);
 SELECT*FROM `work_with`;
 
-1.取得所有員工資料
-SELECT*FROM `employee`;
-2.取得所有客戶資料
-SELECT*FROM `client`;
-3.按薪水低到高取得員工資料
-
-4.取得薪水前3高員工
-
-5.取得所有員工名字
+公司內有哪些性別(不重複)：SELECT DISTINCT `sex` FROM `employee`;
 
 
 
