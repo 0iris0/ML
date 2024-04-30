@@ -45,7 +45,10 @@ WHERE `score`<60;
   
 
 #DQL
-SELECT `name`,`major` FROM `student` ORDER BY `score`;
+SELECT*FROM `student` WHERE `major`='英語' or `score`<>70 ORDER BY `score` DESC LIMIT 2;
+SELECT*FROM `student` WHERE `major` IN('英語','歷史','生物');
+group by
+having
 
 
 
