@@ -123,7 +123,7 @@ SELECT*FROM `work_with`;
 員工名字union客戶名字：SELECT `name` FROM `employee` UNION SELECT `client_name` FROM `client`;
 員工id+員工名字union客戶id+客戶名字：SELECT `emp_id` AS `total_id`,`name` AS `total_name` FROM `employee` UNION SELECT `client_id`,`client_name` FROM `client`;
 員工薪水union銷售金額：SELECT `salary` AS `money` FROM `employee` UNION SELECT `total_sales` FROM `work_with`;
-所有部門經理名字：SELECT `emp_id`,`name`,`branch_name` FROM `employee` JOIN `branch` ON  `emp_id`=`manager_id`;
+所有部門經理名字：SELECT `emp_id`,`name`,`branch_name` FROM `employee` JOIN `branch` ON  `employee`.`emp_id`=`branch`.`manager_id`;
 
 
 
