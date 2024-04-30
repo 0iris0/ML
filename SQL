@@ -11,9 +11,12 @@ CREATE TABLE `student`(
 `major` VARCHAR(20),
 PRIMARY KEY(`student_id`)
 );
+
 DESCRIBE `student`;
+
 ALTER TABLE `student` ADD gpa DECIMAL(3,2);
 ALTER TABLE `student` DROP COLUMN gpa;
+
 DROP TABLE `student`;
 
 
@@ -23,7 +26,9 @@ INSERT INTO `student`(`name`,`major`,`score`) VALUES('小黃','生物',90);
 INSERT INTO `student`(`name`,`major`,`score`) VALUES('小綠','歷史',70);
 INSERT INTO `student`(`name`,`major`,`score`) VALUES('小藍','英語',80);
 INSERT INTO `student`(`name`,`major`,`score`) VALUES('小黑','化學',20);
+
 SELECT*FROM `student`;
+
 UPDATE `student`
 SET `major` ='英語文學'
 WHERE `major` ='英語';
@@ -31,8 +36,13 @@ UPDATE `student`
 SET `name`='小灰',`major`='物理'
 WHERE `student_id`=1;
 
+DELETE FROM `student`
+WHERE `student_id`=4;
+DELETE FROM `student`
+WHERE `name`='小灰' and `major`='物理';
+DELETE FROM `student`
+WHERE `score`<60;
   
-
 
 #DQL
 
