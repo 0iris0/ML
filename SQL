@@ -117,6 +117,11 @@ SELECT*FROM `work_with`;
 員工平均薪水：SELECT AVG(`salary`) FROM `employee`;
 員工薪水總和：SELECT SUM(`salary`) FROM `employee`;
 薪水最高員工：SELECT MAX(`salary`) FROM `employee`;
+電話號碼尾數344客戶資料：SELECT*FROM `client` WHERE `PHONE` LIKE '%344';
+姓艾的客戶：SELECT*FROM `client` WHERE `client_name` LIKE '艾%';
+生日在12月的員工：SELECT*FROM `employee` WHERE `birth_date` LIKE '%-12-%'; =SELECT*FROM `employee` WHERE `birth_date` LIKE '_____12___';
+
+
 
 
 #DCL
