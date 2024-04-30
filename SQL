@@ -54,7 +54,7 @@ having
 CREATE TABLE `employee`(
 `emp_id` INT PRIMARY KEY,
 `name` VARCHAR(20),
-`brith_date` DATE,
+`birth_date` DATE,
 `sex` VARCHAR(20),
 `salary` INT,
 `branch_id` INT,
@@ -109,7 +109,14 @@ INSERT INTO `work_with` VALUES(210,404,87940);
 SELECT*FROM `work_with`;
 
 公司內有哪些性別(不重複)：SELECT DISTINCT `sex` FROM `employee`;
-
+員工資料：SELECT*FROM `employee`;
+員工薪資前3高：SELECT*FROM `employee` order by `salary` DESC LIMIT 3;
+#aggregate function
+員工人數：SELECT COUNT(*) FROM `employee`;
+1970-01-01前出生女性員工人數：SELECT COUNT(*) FROM `employee` WHERE `sex`='F' AND `birth_date`>'1970-01-01';
+員工平均薪水：SELECT AVG(`salary`) FROM `employee`;
+員工薪水總和：SELECT SUM(`salary`) FROM `employee`;
+薪水最高員工：SELECT MAX(`salary`) FROM `employee`;
 
 
 #DCL
