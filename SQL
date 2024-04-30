@@ -1,13 +1,15 @@
-#DDL
 CREATE DATABASE `sqlpractice`;
 SHOW DATABASES;
 DROP DATABASE `practice`;
-
 USE `sqlpractice`;
+
+
+#DDL
 CREATE TABLE `student`(
-`student_id` INT PRIMARY KEY,  #AUTO_INCREMENT自動加1
+`student_id` INT AUTO_INCREMENT,
 `name` VARCHAR(20),  #可新增限制NOT NULL, UNIQUE, DEFAULT 'x'
-`major` VARCHAR(20)
+`major` VARCHAR(20),
+PRIMARY KEY(`student_id`)
 );
 DESCRIBE `student`;
 ALTER TABLE `student` ADD gpa DECIMAL(3,2);
@@ -16,13 +18,18 @@ DROP TABLE `student`;
 
 
 #DML
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小白','英語',50);
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小黃','生物',90);
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小綠','歷史',70);
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小藍','英語',80);
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小黑','化學',20);
 SELECT*FROM `student`;
-INSERT INTO `student` VALUES(1, '小白', '歷史');
-INSERT INTO `student` VALUES(2, '小黑', '生物');
-INSERT INTO `student` VALUES(3, '小綠', NULL);
-INSERT INTO `student`(`major`,`student_id`) VALUES('英語',5);
-
-缺UPDATE DELETE
+UPDATE `student`
+SET `major` ='英語文學'
+WHERE `major` ='英語';
+UPDATE `student`
+SET `name`='小灰',`major`='物理'
+WHERE `student_id`=1;
 
   
 
