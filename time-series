@@ -1,0 +1,26 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.seasonal import STL
+
+#分解時間序列
+df=pd.read_csv("data.csv")
+decomposition=STL(df["x"],period=12).fit()
+
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=4, ncols=1, sharex=True,figsize=(10,8))
+ax1.plot(decomposition.observed)
+ax1.set_ylabel('Observed')
+ax2.plot(decomposition.trend)
+ax2.set_ylabel('Trend')
+ax3.plot(decomposition.seasonal)
+ax3.set_ylabel('Seasonal')
+ax4.plot(decomposition.resid)
+ax4.set_ylabel('Residuals')
+plt.tight_layout()
+
+#ADF檢驗平穩性
+from statsmodels.tsa.stattools import adfuller
+ADF=adfuller.(data)
+
+#自相關檢視
+from statsmodels.graphics.tsaplots import plot_acf
+plot_acf(data,lags=20)
