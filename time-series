@@ -1,8 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from statsmodels.tsa.seasonal import STL
+from statsmodels.tsa.seasonal import seasonal_decompose
 
-#分解時間序列
+#分解時間序列 #修改
 df=pd.read_csv("data.csv")
 decomposition=STL(df["x"],period=12).fit()
 
