@@ -31,10 +31,8 @@ w = np.array([1, 2, 3, 4])
 b = 1
 z = (w*x_train).sum(axis=1)+b
 
-
 def sigmoid(z):
     return 1/(1+np.exp(-z))
-
 
 # print(sigmoid(z))
 log = linear_model.LogisticRegression()
@@ -43,4 +41,9 @@ print(log.predict(x_test))
 print(log.predict_proba(x_test))
 
 # 預測
+pred = log.predict(x_test)
 print(log.score(x_test, y_test))  # 預測力88.75%
+print(metrics.confusion_matrix(y_test, pred))#[[49  3],[ 6 22]]
+
+#結果分析
+利用年齡、體重、性別、血糖預測是否有糖尿病準確率達88.75%
