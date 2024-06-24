@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
 dataset = pd.read_csv("imdb_top_1000.csv")
 
 # 常態性檢定
