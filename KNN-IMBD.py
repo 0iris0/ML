@@ -42,8 +42,8 @@ knn.fit(x_train, y_train)
 
 # 預測
 pred = knn.predict(x_test).tolist()
-acc = accuracy_score(y_test, pred)
-print("準度:", acc) #準度:1.0
+print("accuacy=", accuracy_score(y_test.tolist(), pred))#準度:1.0
+print('metrics', confusion_matrix(y_test.tolist(), pred))#[[253]]
 
 from sklearn.model_selection import cross_val_score #交叉驗證
 k_range=range(2,12)
