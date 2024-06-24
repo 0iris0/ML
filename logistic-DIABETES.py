@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn import linear_model
 import matplotlib.pyplot as plt
+from sklearn import metrics
 data = pd.read_csv("Diabetes_Data.csv")
 # print(data)
 
