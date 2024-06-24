@@ -1,5 +1,5 @@
 # 機器學習方法練習
-1.IMBD預測(Linear、KNN
+1.IMBD預測(KNN
 
 2.是否罹患DIABETES預測(logistic
 
