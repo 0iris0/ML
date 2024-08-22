@@ -1,0 +1,133 @@
+CREATE DATABASE `sqlpractice`;
+SHOW DATABASES;
+DROP DATABASE `practice`;
+USE `sqlpractice`;
+
+
+#DDL
+CREATE TABLE `student`(
+`student_id` INT AUTO_INCREMENT,
+`name` VARCHAR(20),  #可新增限制NOT NULL, UNIQUE, DEFAULT 'x'
+`major` VARCHAR(20),
+PRIMARY KEY(`student_id`)
+);
+
+DESCRIBE `student`;
+
+ALTER TABLE `student` ADD gpa DECIMAL(3,2);
+ALTER TABLE `student` DROP COLUMN gpa;
+
+DROP TABLE `student`;
+
+
+#DML
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小白','英語',50);
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小黃','生物',90);
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小綠','歷史',70);
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小藍','英語',80);
+INSERT INTO `student`(`name`,`major`,`score`) VALUES('小黑','化學',20);
+
+SELECT*FROM `student`;
+
+UPDATE `student`
+SET `major` ='英語文學'
+WHERE `major` ='英語';
+UPDATE `student`
+SET `name`='小灰',`major`='物理'
+WHERE `student_id`=1;
+
+DELETE FROM `student`
+WHERE `student_id`=4;
+DELETE FROM `student`
+WHERE `name`='小灰' and `major`='物理';
+DELETE FROM `student`
+WHERE `score`<60;
+  
+
+#DQL
+SELECT*FROM `student` WHERE `major`='英語' or `score`<>70 ORDER BY `score` DESC LIMIT 2;
+SELECT*FROM `student` WHERE `major` IN('英語','歷史','生物');
+group by
+having
+
+#自創表格練習，表格總覽檔名="SQL圖片"
+CREATE TABLE `employee`(
+`emp_id` INT PRIMARY KEY,
+`name` VARCHAR(20),
+`birth_date` DATE,
+`sex` VARCHAR(20),
+`salary` INT,
+`branch_id` INT,
+`sup_id` INT
+);
+INSERT INTO `employee` VALUES(206,'小黃','1998-10-08','F',50000,1,NULL);
+INSERT INTO `employee` VALUES(207,'小綠','1985-09-16','M',29000,2,206);
+INSERT INTO `employee` VALUES(208,'小黑','2000-12-19','M',35000,3,206);
+INSERT INTO `employee` VALUES(209,'小白','1997-01-22','F',39000,3,207);
+INSERT INTO `employee` VALUES(210,'小蘭','1925-11-10','F',84000,1,207);
+SELECT*FROM `employee`;
+
+CREATE TABLE `branch`(
+`branch_id` INT PRIMARY KEY,
+`branch_name` VARCHAR(20),
+`manager_id` INT
+);
+INSERT INTO `branch` VALUES(1,'研發',206);
+INSERT INTO `branch` VALUES(2,'行政',207);
+INSERT INTO `branch` VALUES(3,'資訊',208);
+SELECT*FROM `branch`;
+
+ALTER TABLE `employee` ADD FOREIGN KEY(`branch_id`) references `branch`(`branch_id`) on delete set null;
+ALTER TABLE `employee` ADD FOREIGN KEY(`sup_id`) references `employee`(`emp_id`) on delete set null;
+ALTER TABLE `branch` ADD FOREIGN KEY(`manager_id`) references `employee`(`emp_id`) on delete set null;
+
+CREATE TABLE `client`(
+`client_id` INT PRIMARY KEY,
+`client_name` VARCHAR(20),
+`phone` INT
+);
+INSERT INTO `client` VALUES(400,'阿狗',0909876543);
+INSERT INTO `client` VALUES(401,'阿貓',0912345678);
+INSERT INTO `client` VALUES(402,'旺來',0911223344);
+INSERT INTO `client` VALUES(403,'露西',0977000000);
+INSERT INTO `client` VALUES(404,'艾瑞克',0987914643);
+SELECT*FROM `client`;
+
+CREATE TABLE `work_with`(
+`emp_id` INT ,
+`client_id` INT,
+`total_sales` INT,
+PRIMARY KEY(`emp_id`,`client_id`),
+FOREIGN KEY(`emp_id`) references `employee`(`emp_id`) on delete cascade,
+FOREIGN KEY(`client_id`) references `client`(`client_id`) on delete cascade
+);
+INSERT INTO `work_with` VALUES(206,400,70000);
+INSERT INTO `work_with` VALUES(207,401,24000);
+INSERT INTO `work_with` VALUES(208,400,9800);
+INSERT INTO `work_with` VALUES(208,403,24000);
+INSERT INTO `work_with` VALUES(210,404,87940);
+SELECT*FROM `work_with`;
+
+公司內有哪些性別(不重複)：SELECT DISTINCT `sex` FROM `employee`;
+員工資料：SELECT*FROM `employee`;
+員工薪資前3高：SELECT*FROM `employee` order by `salary` DESC LIMIT 3;
+#aggregate function
+員工人數：SELECT COUNT(*) FROM `employee`;
+1970-01-01前出生女性員工人數：SELECT COUNT(*) FROM `employee` WHERE `sex`='F' AND `birth_date`>'1970-01-01';
+員工平均薪水：SELECT AVG(`salary`) FROM `employee`;
+員工薪水總和：SELECT SUM(`salary`) FROM `employee`;
+薪水最高員工：SELECT MAX(`salary`) FROM `employee`;
+電話號碼尾數344客戶資料：SELECT*FROM `client` WHERE `PHONE` LIKE '%344';
+姓艾的客戶：SELECT*FROM `client` WHERE `client_name` LIKE '艾%';
+生日在12月的員工：SELECT*FROM `employee` WHERE `birth_date` LIKE '%-12-%'; =SELECT*FROM `employee` WHERE `birth_date` LIKE '_____12___';
+員工名字union客戶名字：SELECT `name` FROM `employee` UNION SELECT `client_name` FROM `client`;
+員工id+員工名字union客戶id+客戶名字：SELECT `emp_id` AS `total_id`,`name` AS `total_name` FROM `employee` UNION SELECT `client_id`,`client_name` FROM `client`;
+員工薪水union銷售金額：SELECT `salary` AS `money` FROM `employee` UNION SELECT `total_sales` FROM `work_with`;
+所有部門經理名字：SELECT `emp_id`,`name`,`branch_name` FROM `employee` JOIN `branch` ON  `employee`.`emp_id`=`branch`.`manager_id`;
+研發部門經理名稱：SELECT `name` FROM `employee` WHERE `emp_id`=(SELECT `manager_id` FROM `branch` WHERE `branch_name`='研發');
+對單一客戶銷售超過50000的員工名字：SELECT `name` FROM `employee` WHERE `emp_id` IN(SELECT `emp_id` FROM `work_with` WHERE `total_sales`>50000);
+
+
+#DCL
+grant on
+deny on
