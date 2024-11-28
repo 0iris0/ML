@@ -9,8 +9,8 @@ from sklearn.linear_model import LogisticRegression
 # 匯入資料
 data = pd.read_csv("manufacturing_defect_dataset.csv")
 # print(data)
-x = data.iloc[:, :-1]
-y = data[["DefectStatus"]]
+# x = data.iloc[:, :-1]
+# y = data[["DefectStatus"]]
 # print(x)
 
 # 資料每欄確認分布狀態、除錯(排除異常值、填補)
@@ -20,15 +20,15 @@ y = data[["DefectStatus"]]
 # print(data.head())
 df_describe = pd.DataFrame(data.describe())
 list_x_names = list(data.describe().columns)
-for d in list_x_names:
-    IQR = x[d].iloc[6]-x[d].iloc[4]
-    outlier_max = x[d].iloc[6]+1.5*IQR
-    outlier_min = x[d].iloc[4]-1.5*IQR
-    normal_range = outlier_max-outlier_min
-    for i in range(len(x)):
-        if x[i] not in normal_range:
-            x = x.drop([i])
-print(x)
+IQR = df_describe.iloc[6]-df_describe.iloc[4]
+outlier_max = df_describe.iloc[6]+1.5*IQR
+outlier_min = df_describe.iloc[4]-1.5*IQR
+for n in list_x_names:
+    data = data[(data[n] <= outlier_max) & (
+        data[n] >= outlier_min)]
+print(data)
+# .reset_index(drop=True)
+
 
 # 視覺化
 features = [col for col in x.columns]
