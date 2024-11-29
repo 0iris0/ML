@@ -9,28 +9,28 @@ from sklearn.linear_model import LogisticRegression
 # 匯入資料
 data = pd.read_csv("manufacturing_defect_dataset.csv")
 # print(data)
-# x = data.iloc[:, :-1]
-# y = data[["DefectStatus"]]
-# print(x)
 
 # 資料每欄確認分布狀態、除錯(排除異常值、填補)
 # print(data.info())
 # print(data.describe())
 # print(data.isnull())
 # print(data.head())
-df_describe = pd.DataFrame(data.describe())
-list_x_names = list(data.describe().columns)
-IQR = df_describe.iloc[6]-df_describe.iloc[4]
-outlier_max = df_describe.iloc[6]+1.5*IQR
-outlier_min = df_describe.iloc[4]-1.5*IQR
-for n in list_x_names:
-    data = data[(data[n] <= outlier_max) & (
-        data[n] >= outlier_min)]
-print(data)
-# .reset_index(drop=True)
+list_x_names = list(data.columns)
+for d in list_x_names:
+    per25 = np.percentile(data[d], 25)
+    per75 = np.percentile(data[d], 75)
+    IQR = per75-per25
+    outlier_max = per75+1.5*IQR
+    outlier_min = per25-1.5*IQR
+    data = data[(data[d] >= outlier_min) & (data[d] <= outlier_max)]
+data = data.reset_index(drop=True)
+# print(data)
 
 
 # 視覺化
+x = data.iloc[:, :-1]
+y = data[["DefectStatus"]]
+# print(x)
 features = [col for col in x.columns]
 plt.figure(figsize=(15, 5))
 rows = len(features)//3
