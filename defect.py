@@ -27,7 +27,6 @@ for d in list_x_names:
 data_x = data_x.reset_index(drop=True)
 # print(data_x)
 
-
 # 視覺化
 x = data_x.iloc[:]
 y = data[["DefectStatus"]]
@@ -45,11 +44,8 @@ for i, feature in enumerate(features, 1):
 plt.tight_layout()  # 調整佈局
 # plt.show()
 
-# 計算相關性、共線性
+# 前處理、標準化、正規化、特徵工程...
 
-# a = data.corr()
-# print(a)
-# 前處理、標準化、正規化
 
 # 建模
 
