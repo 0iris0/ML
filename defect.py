@@ -1,3 +1,4 @@
+import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
@@ -52,7 +53,9 @@ x_scalar = scalar.fit_transform(x)
 # print(x_scalar)
 
 # 特徵選擇，看特徵相關性(heatmap)
-
+heat = sns.heatmap(x_scalar, cmap="Blues")
+plt.title("defect heatmap")
+plt.show()
 
 # 建模
 
