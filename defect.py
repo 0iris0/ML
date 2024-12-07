@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-# 預測是否為缺陷，並比較羅吉斯回歸與clustering成效
+# 預測是否為缺陷(使用logistic regression)
 
 # 匯入資料
 data = pd.read_csv("manufacturing_defect_dataset.csv")
@@ -44,7 +44,14 @@ for i, feature in enumerate(features, 1):
 plt.tight_layout()  # 調整佈局
 # plt.show()
 
-# 前處理、標準化、正規化、特徵工程...
+# 特徵工程
+# 標準化
+clf = LogisticRegression()
+scalar = StandardScaler()
+x_scalar = scalar.fit_transform(x)
+# print(x_scalar)
+
+# 特徵選擇，看特徵相關性(heatmap)
 
 
 # 建模
