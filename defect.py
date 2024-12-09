@@ -32,17 +32,17 @@ data_x = data_x.reset_index(drop=True)
 x = data_x.iloc[:]
 y = data[["DefectStatus"]]
 # print(x)
-features = [col for col in x.columns]
-plt.figure(figsize=(15, 5))
-rows = (len(features)+2)//3
-for i, feature in enumerate(features, 1):
-    plt.subplot(rows, 3, i)
-    plt.scatter(x[feature], data["DefectStatus"], alpha=0.7, label=feature)
-    plt.xlabel(feature)
-    plt.ylabel("DefectStatus")
-    # plt.title(f"{feature} vs DefectStatus")
-    plt.grid(True)
-plt.tight_layout()  # 調整佈局
+# features = [col for col in x.columns]
+# plt.figure(figsize=(15, 5))
+# rows = (len(features)+2)//3
+# for i, feature in enumerate(features, 1):
+#     plt.subplot(rows, 3, i)
+#     plt.scatter(x[feature], data["DefectStatus"], alpha=0.7, label=feature)
+#     plt.xlabel(feature)
+#     plt.ylabel("DefectStatus")
+#     # plt.title(f"{feature} vs DefectStatus")
+#     plt.grid(True)
+# plt.tight_layout()  # 調整佈局
 # plt.show()
 
 # 特徵工程
@@ -53,9 +53,15 @@ x_scalar = scalar.fit_transform(x)
 # print(x_scalar)
 
 # 特徵選擇，看特徵相關性(heatmap)
-heat = sns.heatmap(x_scalar, cmap="Blues")
-plt.title("defect heatmap")
-plt.show()
+cor = pd.DataFrame(x_scalar).corr()
+# print(cor)
+threshold = abs(cor).min()
+# print(threshold)
+fliter_corr = cor.where(abs(cor) > threshold)
+plt.figure(figsize=(10, 10))
+sns.heatmap(fliter_corr, cmap="Blues", annot=True, fmt=".3f")
+plt.title("fliter defect heatmap")
+# plt.show()
 
 # 建模
 
