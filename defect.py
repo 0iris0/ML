@@ -1,5 +1,5 @@
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,20 +16,22 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 # print(data.describe())
 # print(data.isnull())
 # print(data.head())
-data_x = data.iloc[:, :-1]
-list_x_names = list(data_x.columns)
+list_x_names = list(data.columns)
 for d in list_x_names:
-    per25 = np.percentile(data_x[d], 25)
-    per75 = np.percentile(data_x[d], 75)
-    IQR = per75-per25
-    outlier_max = per75+1.5*IQR
-    outlier_min = per25-1.5*IQR
-    data_x = data_x[(data_x[d] >= outlier_min) & (data_x[d] <= outlier_max)]
-data_x = data_x.reset_index(drop=True)
-# print(data_x)
+    if d == "DefectStatus":
+        break
+    else:
+        per25 = np.percentile(data[d], 25)
+        per75 = np.percentile(data[d], 75)
+        IQR = per75-per25
+        outlier_max = per75+1.5*IQR
+        outlier_min = per25-1.5*IQR
+        data = data[(data[d] >= outlier_min) & (data[d] <= outlier_max)]
+data = data.reset_index(drop=True)
+# print(data)
 
 # 視覺化
-x = data_x.iloc[:]
+x = data.iloc[:, :-1]
 y = data[["DefectStatus"]]
 # print(x)
 # features = [col for col in x.columns]
@@ -46,25 +48,20 @@ y = data[["DefectStatus"]]
 # plt.show()
 
 # 特徵工程
-# 標準化
-clf = LogisticRegression()
-scalar = StandardScaler()
+# 正規化
+scalar = MinMaxScaler()
 x_scalar = scalar.fit_transform(x)
-# print(x_scalar)
-
-# 特徵選擇，看特徵相關性(heatmap)
-cor = pd.DataFrame(x_scalar).corr()
-# print(cor)
-threshold = abs(cor).min()
-# print(threshold)
-fliter_corr = cor.where(abs(cor) > threshold)
+# 看相關性選擇特徵
+cor_data = pd.concat([x, y], axis=1)
+cor = pd.DataFrame(cor_data).corr()
 plt.figure(figsize=(10, 10))
-sns.heatmap(fliter_corr, cmap="Blues", annot=True, fmt=".3f")
+sns.heatmap(cor, cmap="Blues", annot=True, fmt=".3f")
 plt.title("fliter defect heatmap")
 # plt.show()
+# 選擇保留3項特徵
 
 # 建模
-
+model = LogisticRegression()
 
 # 測試
 
