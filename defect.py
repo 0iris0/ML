@@ -55,10 +55,13 @@ x_scalar = scalar.fit_transform(x)
 cor_data = pd.concat([x, y], axis=1)
 cor = pd.DataFrame(cor_data).corr()
 plt.figure(figsize=(10, 10))
-sns.heatmap(cor, cmap="Blues", annot=True, fmt=".3f")
+sns.heatmap(cor, cmap="Reds", annot=True, fmt=".3f")
 plt.title("fliter defect heatmap")
 # plt.show()
 # 選擇保留3項特徵
+fliter_x = cor[abs(cor["DefectStatus"]) > 0.1]
+print(fliter_x)
+
 
 # 建模
 model = LogisticRegression()
