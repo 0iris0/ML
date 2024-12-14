@@ -1,3 +1,5 @@
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
@@ -58,14 +60,27 @@ plt.figure(figsize=(10, 10))
 sns.heatmap(cor, cmap="Reds", annot=True, fmt=".3f")
 plt.title("fliter defect heatmap")
 # plt.show()
-# 選擇保留3項特徵
+# 選擇保留4項特徵
 fliter_x = cor[abs(cor["DefectStatus"]) > 0.1]
-print(fliter_x)
+select_4x = list(fliter_x.index[fliter_x.index != "DefectStatus"])
+# print(select_4x) #['ProductionVolume', 'DefectRate', 'QualityScore', 'MaintenanceHours']
 
+# 前處理
+data_x = data[select_4x]
+data_y = data["DefectStatus"]
+x_train, x_test, y_train, y_test = train_test_split(
+    data_x, data_y, test_size=0.2, random_state=6)
+x_train, x_valid, y_train, y_valid = train_test_split(
+    x_train, y_train, test_size=0.2, random_state=1)
 
 # 建模
 model = LogisticRegression()
+model.fit(x_train, y_train)
 
-# 測試
-
-# 模型正確率達
+# 模型測試
+y_pred = model.predict(x_test)
+cm = confusion_matrix(y_test, y_pred)
+print("混淆矩陣=", cm)  # [[ 34  78],[ 14 522]]
+print("模型準確率：", round((model.score(x_test, y_test))*100, 1), "%")  # 85.8%
+scores = cross_val_score(model, data_x, data_y, cv=5, scoring="accuracy")
+print("交叉驗證後模型準確率：", round((scores.mean())*100, 1), "%")  # 87.3%
