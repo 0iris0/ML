@@ -70,8 +70,6 @@ data_x = data[select_4x]
 data_y = data["DefectStatus"]
 x_train, x_test, y_train, y_test = train_test_split(
     data_x, data_y, test_size=0.2, random_state=6)
-x_train, x_valid, y_train, y_valid = train_test_split(
-    x_train, y_train, test_size=0.2, random_state=1)
 
 # 建模
 model = LogisticRegression()
