@@ -1,3 +1,4 @@
+from xgboost import XGBClassifier
 import scipy.stats as stats
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import confusion_matrix
@@ -97,13 +98,20 @@ x_train_scalered = scaler.fit_transform(x_train)
 x_test_scalered = scaler.fit_transform(x_test)
 
 # 建模
-model = SVC(kernel="rbf", C=1.0)
+# 非線性SVM
+# model = SVC(kernel="rbf", C=1.0, gamma=0.1, random_state=0)
+# model.fit(x_train, y_train)
+# XGBoost
+model = XGBClassifier()
 model.fit(x_train, y_train)
 
 # 模型測試
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
-print("混淆矩陣=", cm)  # [[ 0  112],[ 0 536]]
-print("模型準確率：", round((model.score(x_test, y_test))*100, 1), "%")  # 82.7%
+print("混淆矩陣=", cm)  # SVM=[[2 110],[1 535]], XGB[[85 27],[4 532]]
+print("模型準確率：", round((model.score(x_test, y_test))*100, 1),
+      "%")  # SVM=82.9%, XGB=95.2%
 scores = cross_val_score(model, data_x, data_y, cv=5, scoring="accuracy")
-print("交叉驗證後模型準確率：", round((scores.mean())*100, 1), "%")  # 84.0%
+print("交叉驗證後模型準確率：", round((scores.mean())*100, 1), "%")  # SVM=84.6%, XGB=95.8%
+
+# 採用XGB產生的模型，因正確率達95.2%較高
