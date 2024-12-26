@@ -1,3 +1,4 @@
+from sklearn.metrics import accuracy_score
 from xgboost import XGBClassifier
 import scipy.stats as stats
 from sklearn.model_selection import cross_val_score
@@ -112,10 +113,12 @@ model.fit(x_train, y_train)
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
 print("混淆矩陣=", cm)  # SVM=[[2 110],[0 536]], XGB[[85 27],[4 532]]
-print("模型準確率：", round((model.score(x_test, y_test))*100, 1),
+accuracy = round(accuracy_score(y_test, y_pred), 1)
+print("預測準確率：", round((accuracy*100), 1), "%")  # SVM=80.0%, XGB=100.0%
+print("測試集x準確率：", round((model.score(x_test, y_test))*100, 1),
       "%")  # SVM=83.0%, XGB=95.2%
 scores = cross_val_score(model, data_x,
                          data_y, cv=10, scoring="accuracy")
-print("交叉驗證模型準確率：", round((scores.mean())*100, 1), "%")  # SVM=84.8%, XGB=95.7%
+print("交叉驗證準確率：", round((scores.mean())*100, 1), "%")  # SVM=84.8%, XGB=95.7%
 
-# 採用XGB產生的模型，因正確率達95.2%較高
+# 採用XGB產生的模型，因準確率達95.7%最高
