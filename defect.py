@@ -133,16 +133,16 @@ model = rscv.best_estimator_
 # 模型測試
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
-# SVM=[[2 110],[0 536]], XGB[[85 27],[4 532]],XGB優化=[[ 84  28],[  4 532]]
+# SVM=[[2 110],[0 536]], XGB[[85 27],[4 532]], XGB優化=[[ 84  28],[  4 532]]
 print("混淆矩陣=", cm)
 accuracy = round(accuracy_score(y_test, y_pred), 1)
 print("預測準確率:", round((accuracy*100), 1),
-      "%")  # SVM=80.0%, XGB=100.0%,XGB優化=100.0%
+      "%")  # SVM=80.0%, XGB=100.0%, XGB優化=100.0%
 print("測試集x準確率:", round((model.score(x_test, y_test))*100, 1),
-      "%")  # SVM=83.0%, XGB=95.2%,XGB優化=95.1%
+      "%")  # SVM=83.0%, XGB=95.2%, XGB優化=95.1%
 scores = cross_val_score(model, data_x,
                          data_y, cv=10, scoring="accuracy")
 print("交叉驗證準確率：", round((scores.mean())*100, 1),
-      "%")  # SVM=84.8%, XGB=95.7%,XGB優化=96.1%
+      "%")  # SVM=84.8%, XGB=95.7%, XGB優化=96.1%
 
 # 採用XGB產生的模型，因準確率達96.1%最高
