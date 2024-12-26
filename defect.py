@@ -9,7 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
-# 預測是否為缺陷(初評模型可用logistic/svm/XGBoost)
+# 預測是否為缺陷
+# 初評模型可選用logistic,svm,XGBoost來比較
 
 # 匯入資料
 data = pd.read_csv("manufacturing_defect_dataset.csv")
@@ -79,10 +80,12 @@ rows = (len(features)+2)//3
 cor_data = pd.concat([x, y], axis=1)
 cor = pd.DataFrame(cor_data).corr()
 plt.figure(figsize=(10, 10))
-sns.heatmap(cor, cmap="Reds", annot=True, fmt=".3f")  # 非線性
+sns.heatmap(cor, cmap="Reds", annot=True, fmt=".3f")
 plt.title("fliter defect heatmap")
 # plt.show()
-# 選擇保留4項特徵
+# 特徵皆非線性
+
+# 以上觀察選擇保留4項與y相關性較高特徵
 fliter_x = cor[abs(cor["DefectStatus"]) > 0.1]
 select_4x = list(fliter_x.index[fliter_x.index != "DefectStatus"])
 # print(select_4x) #['ProductionVolume', 'DefectRate', 'QualityScore', 'MaintenanceHours']
@@ -100,7 +103,7 @@ x_test_scalered = scaler.fit_transform(x_test)
 # 建模
 # 非線性SVM
 # model = SVC(kernel="rbf", C=1.0, gamma=0.1, random_state=0)
-# model.fit(x_train, y_train)
+# model.fit(x_train_scalered, y_train)
 # XGBoost
 model = XGBClassifier()
 model.fit(x_train, y_train)
@@ -108,9 +111,9 @@ model.fit(x_train, y_train)
 # 模型測試
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
-print("混淆矩陣=", cm)  # SVM=[[2 110],[1 535]], XGB[[85 27],[4 532]]
+print("混淆矩陣=", cm)  # SVM=[[2 110],[0 536]], XGB[[85 27],[4 532]]
 print("模型準確率：", round((model.score(x_test, y_test))*100, 1),
-      "%")  # SVM=82.9%, XGB=95.2%
+      "%")  # SVM=83.0%, XGB=95.2%
 scores = cross_val_score(model, data_x, data_y, cv=5, scoring="accuracy")
 print("交叉驗證後模型準確率：", round((scores.mean())*100, 1), "%")  # SVM=84.6%, XGB=95.8%
 
