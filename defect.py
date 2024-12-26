@@ -114,7 +114,8 @@ cm = confusion_matrix(y_test, y_pred)
 print("混淆矩陣=", cm)  # SVM=[[2 110],[0 536]], XGB[[85 27],[4 532]]
 print("模型準確率：", round((model.score(x_test, y_test))*100, 1),
       "%")  # SVM=83.0%, XGB=95.2%
-scores = cross_val_score(model, data_x, data_y, cv=5, scoring="accuracy")
-print("交叉驗證後模型準確率：", round((scores.mean())*100, 1), "%")  # SVM=84.6%, XGB=95.8%
+scores = cross_val_score(model, x_train,
+                         y_train, cv=10, scoring="accuracy")
+print("交叉驗證後模型準確率：", round((scores.mean())*100, 1), "%")  # SVM=84.9%, XGB=95.8%
 
 # 採用XGB產生的模型，因正確率達95.2%較高
