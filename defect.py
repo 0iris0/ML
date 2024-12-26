@@ -1,3 +1,4 @@
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import accuracy_score
 from xgboost import XGBClassifier
 import scipy.stats as stats
@@ -109,16 +110,39 @@ x_test_scalered = scaler.fit_transform(x_test)
 model = XGBClassifier()
 model.fit(x_train, y_train)
 
+# XGB超參數優化
+param_dist = {
+    'n_estimators': np.arange(50, 300),
+    'max_depth': [3, 5, 7, 9],
+    'learning_rate': np.linspace(0.01, 0.3, 10),
+    'subsample': [0.6, 0.8, 1.0],
+    'colsample_bytree': [0.6, 0.8, 1.0]
+}
+rscv = RandomizedSearchCV(
+    estimator=model,
+    param_distributions=param_dist,
+    n_iter=30,
+    scoring="accuracy",
+    cv=10
+)
+rscv.fit(x_train, y_train)
+print("優化最佳參數:", rscv.best_params_)
+print("優化最佳準確率:", round((rscv.best_score_)*100, 1), "%")  # XGB優化=96.3%
+model = rscv.best_estimator_
+
 # 模型測試
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
-print("混淆矩陣=", cm)  # SVM=[[2 110],[0 536]], XGB[[85 27],[4 532]]
+# SVM=[[2 110],[0 536]], XGB[[85 27],[4 532]],XGB優化=[[ 84  28],[  4 532]]
+print("混淆矩陣=", cm)
 accuracy = round(accuracy_score(y_test, y_pred), 1)
-print("預測準確率：", round((accuracy*100), 1), "%")  # SVM=80.0%, XGB=100.0%
-print("測試集x準確率：", round((model.score(x_test, y_test))*100, 1),
-      "%")  # SVM=83.0%, XGB=95.2%
+print("預測準確率:", round((accuracy*100), 1),
+      "%")  # SVM=80.0%, XGB=100.0%,XGB優化=100.0%
+print("測試集x準確率:", round((model.score(x_test, y_test))*100, 1),
+      "%")  # SVM=83.0%, XGB=95.2%,XGB優化=95.1%
 scores = cross_val_score(model, data_x,
                          data_y, cv=10, scoring="accuracy")
-print("交叉驗證準確率：", round((scores.mean())*100, 1), "%")  # SVM=84.8%, XGB=95.7%
+print("交叉驗證準確率：", round((scores.mean())*100, 1),
+      "%")  # SVM=84.8%, XGB=95.7%,XGB優化=96.1%
 
-# 採用XGB產生的模型，因準確率達95.7%最高
+# 採用XGB產生的模型，因準確率達96.1%最高
