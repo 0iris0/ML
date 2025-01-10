@@ -113,14 +113,14 @@ from sklearn.ensemble import IsolationForest
 iso_forest=IsolationForest(contamination=0.05,random_state=11)#用於高維且能檢測非線性
 outliers=iso_forest.fit_predict(data)
 data["is_outlier"]=outliers
-flitered_iso_outliers_data=data[data["is_outlier"]==1].drop(columns=["is_outlier"])
+data=data[data["is_outlier"]==1].drop(columns=["is_outlier"])
 #排除異常值_modified_z_score
 from scipy.stats import median_absolute_deviation
-for col in num_features:
-    median=data[col].median()
-    mad=median_absolute_deviation(data[col])#用於近似常態,維度小,數據量少,異常值較少
-    data["modified_z_score"]=0.6745*(data[col]-median)/mad
-flitered_z_outliers_data=data[data["modified_z_score"].abs()<3.5].drop(columns=["modified_z_score"])
+# for col in num_features:
+#     median=data[col].median()
+#     mad=median_absolute_deviation(data[col])#用於近似常態,維度小,數據量少,異常值較少
+#     data["modified_z_score"]=0.6745*(data[col]-median)/mad
+# data=data[data["modified_z_score"].abs()<3.5].drop(columns=["modified_z_score"])
 # #排除異常值_1.5IQR
 # list_x_names = list(data.columns)
 # for d in list_x_names:
@@ -136,21 +136,15 @@ flitered_z_outliers_data=data[data["modified_z_score"].abs()<3.5].drop(columns=[
 # data = data.reset_index(drop=True)
 # print(data)
 
-
-# 以上觀察選擇保留4項與y相關性較高特徵
-fliter_x = cor[abs(cor["DefectStatus"]) > 0.1]
-select_4x = list(fliter_x.index[fliter_x.index != "DefectStatus"])
-# print(select_4x) #['ProductionVolume', 'DefectRate', 'QualityScore', 'MaintenanceHours']
-
 # 前處理
-data_x = data[select_4x]
+data_x = data[:,-1]
 data_y = data["DefectStatus"]
 x_train, x_test, y_train, y_test = train_test_split(
     data_x, data_y, test_size=0.2, random_state=6)
 # 正規化
-scaler = MinMaxScaler()
-x_train_scalered = scaler.fit_transform(x_train)
-x_test_scalered = scaler.fit_transform(x_test)
+# scaler = MinMaxScaler()
+# x_train_scalered = scaler.fit_transform(x_train)#用XGBoost不用
+# x_test_scalered = scaler.fit_transform(x_test)
 
 # 建模
 # 非線性SVM
