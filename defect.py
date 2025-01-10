@@ -108,12 +108,33 @@ for categ in categ_features:
     plt.show()
 
 #資料探勘
-#排除異常值
+#排除異常值_IsolationForest
 from sklearn.ensemble import IsolationForest
-iso_forest=IsolationForest(contamination=0.05,random_state=11)#高維,能檢測非線性
+iso_forest=IsolationForest(contamination=0.05,random_state=11)#用於高維且能檢測非線性
 outliers=iso_forest.fit_predict(data)
 data["is_outlier"]=outliers
-flitered_outliers_data=data[data["is_outlier"]==1].drop(columns=["is_outlier"])
+flitered_iso_outliers_data=data[data["is_outlier"]==1].drop(columns=["is_outlier"])
+#排除異常值_modified_z_score
+from scipy.stats import median_absolute_deviation
+for col in num_features:
+    median=data[col].median()
+    mad=median_absolute_deviation(data[col])#用於近似常態,維度小,數據量少,異常值較少
+    data["modified_z_score"]=0.6745*(data[col]-median)/mad
+flitered_z_outliers_data=data[data["modified_z_score"].abs()<3.5].drop(columns=["modified_z_score"])
+# #排除異常值_1.5IQR
+# list_x_names = list(data.columns)
+# for d in list_x_names:
+#     if d == "DefectStatus":
+#         break
+#     else:
+#         per25 = np.percentile(data[d], 25)
+#         per75 = np.percentile(data[d], 75)
+#         IQR = per75-per25
+#         outlier_max = per75+1.5*IQR
+#         outlier_min = per25-1.5*IQR
+#         data = data[(data[d] >= outlier_min) & (data[d] <= outlier_max)]#用於常態資料
+# data = data.reset_index(drop=True)
+# print(data)
 
 
 # 以上觀察選擇保留4項與y相關性較高特徵
