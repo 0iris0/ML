@@ -18,7 +18,7 @@ from sklearn.svm import SVC
 data = pd.read_csv("manufacturing_defect_dataset.csv")
 # print(data)
 
-# 資料每欄確認分布狀態、除錯、排除異常值、填補...
+# 資料概覽
 # print(data.info())
 # print(data.describe())
 # print(data.head())
@@ -71,22 +71,10 @@ for feature in num_features:
     sns.boxplot(x=data[feature])
     plt.title(f"{feature}箱型圖")
     plt.show()
-# sns.heatmap(data.isnull(), cbar=False, cmap="viridis")
-# plt.title("缺失值分佈")
-# plt.show()
-#移除異常值
-# for d in num_features:
-#     if d == "DefectStatus":
-#         break
-#     else:
-#         per25 = np.percentile(data[d], 25)
-#         per75 = np.percentile(data[d], 75)
-#         IQR = per75-per25
-#         outlier_max = per75+1.5*IQR
-#         outlier_min = per25-1.5*IQR
-#         data = data[(data[d] >= outlier_min) & (data[d] <= outlier_max)] #移除距離Q1,Q3之1.5IQR的值
-# data = data.reset_index(drop=True)
-# #print(data)
+sns.heatmap(data.isnull(), cbar=False, cmap="viridis")
+plt.title("缺失值分佈")
+plt.show()
+
 #視覺化特徵與目標變數之關係
 for feature in num_features:
     plt.figure(figsize=(10,5))
@@ -119,7 +107,14 @@ for categ in categ_features:
     plt.ylabel("DefectStatus")
     plt.show()
 
-#資料探勘_特徵轉換
+#資料探勘
+#排除異常值
+from sklearn.ensemble import IsolationForest
+iso_forest=IsolationForest(contamination=0.05,random_state=11)#高維,能檢測非線性
+outliers=iso_forest.fit_predict(data)
+data["is_outlier"]=outliers
+flitered_outliers_data=data[data["is_outlier"]==1].drop(columns=["is_outlier"])
+
 
 # 以上觀察選擇保留4項與y相關性較高特徵
 fliter_x = cor[abs(cor["DefectStatus"]) > 0.1]
