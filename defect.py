@@ -21,8 +21,37 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 # 資料每欄確認分布狀態、除錯、排除異常值、填補...
 # print(data.info())
 # print(data.describe())
-# print(data.isnull())
 # print(data.head())
+# print(data.tail())
+# print(data.isnull().sum())
+# print(data.nunique())
+
+#分析目標變數
+sns.countplot(x="DefectStatus",data=data)
+plt.title("目標變數類別分佈")
+plt.show()
+#類別比例檢查
+print(data["DefectStatus"].value_counts(normalize=True)*100)
+
+#各個特徵分析
+num_features=data.select_dtypes(include=["int64","float64"]).columns
+for feature in num_features:
+    plt.figure(figsize=(10,5))
+    sns.hisplot(data[feature],kde=True)
+    plt.title(f"{feature}分佈")
+    plt.xlabel(feature)
+    plt.ylabel("frequency")
+    plt.show()
+#箱型圖檢查異常值
+for feature in num_features:
+    plt.figure(figsize=(10,5))
+    sns.boxplot(x=data[feature])
+    plt.title(f"{feature}箱型圖")
+    plt.show()
+
+#分析特徵間關係
+
+
 list_x_names = list(data.columns)
 for d in list_x_names:
     if d == "DefectStatus":
