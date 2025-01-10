@@ -28,62 +28,22 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 
 #分析目標變數
 sns.countplot(x="DefectStatus",data=data)
+plt.rc("font",family="Microsoft JhengHei")
 plt.title("目標變數類別分佈")
 plt.show()
 #類別比例檢查
 print(data["DefectStatus"].value_counts(normalize=True)*100)
 
-#各個特徵分析
+#分析各個數值特徵
 num_features=data.select_dtypes(include=["int64","float64"]).columns
 for feature in num_features:
     plt.figure(figsize=(10,5))
     sns.hisplot(data[feature],kde=True)
-    plt.title(f"{feature}分佈")
+    plt.title(f"{feature}數值分佈")
     plt.xlabel(feature)
     plt.ylabel("frequency")
     plt.show()
-#箱型圖檢查異常值
-for feature in num_features:
-    plt.figure(figsize=(10,5))
-    sns.boxplot(x=data[feature])
-    plt.title(f"{feature}箱型圖")
-    plt.show()
-
-#分析特徵間關係
-
-
-list_x_names = list(data.columns)
-for d in list_x_names:
-    if d == "DefectStatus":
-        break
-    else:
-        per25 = np.percentile(data[d], 25)
-        per75 = np.percentile(data[d], 75)
-        IQR = per75-per25
-        outlier_max = per75+1.5*IQR
-        outlier_min = per25-1.5*IQR
-        data = data[(data[d] >= outlier_min) & (data[d] <= outlier_max)]
-data = data.reset_index(drop=True)
-# print(data)
-
-# 視覺化
-x = data.iloc[:, :-1]
-y = data[["DefectStatus"]]
-# print(x)
-features = [col for col in x.columns]
-plt.figure(figsize=(15, 5))
-rows = (len(features)+2)//3
-# for i, feature in enumerate(features, 1):
-#     plt.subplot(rows, 3, i)
-#     plt.scatter(x[feature], data["DefectStatus"], alpha=0.7, label=feature)
-#     plt.xlabel(feature)
-#     plt.ylabel("DefectStatus")
-#     # plt.title(f"{feature} vs DefectStatus")
-#     plt.grid(True)
-# plt.tight_layout()  # 調整佈局
-# plt.show()
-
-# 是否為常態分佈
+# 檢定常態性
 # 用hist看
 # for i, feature in enumerate(features, 1):
 #     plt.subplot(rows, 3, i)
@@ -105,16 +65,61 @@ rows = (len(features)+2)//3
 #         print("資料常態分佈")
 #     else:
 #         print("資料非常態分佈")
-
-# 特徵工程
-# 看相關性選擇特徵
-cor_data = pd.concat([x, y], axis=1)
-cor = pd.DataFrame(cor_data).corr()
-plt.figure(figsize=(10, 10))
-sns.heatmap(cor, cmap="Reds", annot=True, fmt=".3f")
-plt.title("fliter defect heatmap")
+#檢查異常值
+for feature in num_features:
+    plt.figure(figsize=(10,5))
+    sns.boxplot(x=data[feature])
+    plt.title(f"{feature}箱型圖")
+    plt.show()
+# sns.heatmap(data.isnull(), cbar=False, cmap="viridis")
+# plt.title("缺失值分佈")
 # plt.show()
-# 特徵皆非線性
+#移除異常值
+# for d in num_features:
+#     if d == "DefectStatus":
+#         break
+#     else:
+#         per25 = np.percentile(data[d], 25)
+#         per75 = np.percentile(data[d], 75)
+#         IQR = per75-per25
+#         outlier_max = per75+1.5*IQR
+#         outlier_min = per25-1.5*IQR
+#         data = data[(data[d] >= outlier_min) & (data[d] <= outlier_max)] #移除距離Q1,Q3之1.5IQR的值
+# data = data.reset_index(drop=True)
+# #print(data)
+#視覺化特徵與目標變數之關係
+for feature in num_features:
+    plt.figure(figsize=(10,5))
+    plt.plot(x=data[feature],y=data["DefectStatus"])
+    plt.title(f"{feature} vs DefectStatus")
+    plt.xlabel(feature)
+    plt.ylabel("DefectStatus")
+    plt.show()
+#觀察相關性
+cor = data.corr()
+plt.figure(figsize=(10, 10))
+sns.heatmap(cor, cmap="coolwarm", annot=True, fmt=".2f")
+plt.title("特徵相關性熱力圖")
+# plt.show()# 特徵皆非線性
+#檢定共線性VIF
+
+
+#分析各個類別特徵
+categ_features=data.select_dtypes(include=["object","category"]).columns
+for categ in categ_features:
+    plt.figure(figsize=(10,5))
+    sns.countplot(x=categ,data=data=data)
+    plt.title(f"{feature}類別分佈")
+    plt.show()
+#視覺化特徵與目標變數之關係
+    plt.figure(figsize=(10,5))
+    plt.barplot(x=categ,y='DefectStatus',data=data)
+    plt.title(f"{categ} vs DefectStatus"")
+    plt.xlabel(categ)
+    plt.ylabel("DefectStatus")
+    plt.show()
+
+#資料探勘_特徵轉換
 
 # 以上觀察選擇保留4項與y相關性較高特徵
 fliter_x = cor[abs(cor["DefectStatus"]) > 0.1]
