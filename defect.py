@@ -1,3 +1,4 @@
+from sklearn.metrics import f1_score, roc_auc_score, recall_score, precision_score
 from matplotlib import rc
 from scipy.stats import median_abs_deviation
 from sklearn.ensemble import IsolationForest
@@ -145,37 +146,49 @@ model = XGBClassifier()
 model.fit(x_train, y_train)
 
 # XGB超參數優化
-param_dist = {
-    'n_estimators': np.arange(50, 300),
-    'max_depth': [3, 5, 7, 9],
-    'learning_rate': np.linspace(0.01, 0.3, 10),
-    'subsample': [0.6, 0.8, 1.0],
-    'colsample_bytree': [0.6, 0.8, 1.0]
-}
-rscv = RandomizedSearchCV(
-    estimator=model,
-    param_distributions=param_dist,
-    n_iter=30,
-    scoring="accuracy",
-    cv=10
-)
-rscv.fit(x_valid, y_valid)
-print("優化最佳參數:", rscv.best_params_)
-print("優化最佳準確率:", round((rscv.best_score_)*100, 1), "%")
-model = rscv.best_estimator_
+# param_dist = {
+#     'n_estimators': np.arange(50, 300),
+#     'max_depth': [3, 5, 7, 9],
+#     'learning_rate': np.linspace(0.01, 0.3, 10),
+#     'subsample': [0.6, 0.8, 1.0],
+#     'colsample_bytree': [0.6, 0.8, 1.0]
+# }
+# rscv = RandomizedSearchCV(
+#     estimator=model,
+#     param_distributions=param_dist,
+#     n_iter=30,
+#     scoring="accuracy",
+#     cv=10
+# )
+# rscv.fit(x_valid, y_valid)
+# print("優化最佳參數:", rscv.best_params_)
+# print("優化最佳準確率:", round((rscv.best_score_)*100, 1), "%")
+# model = rscv.best_estimator_
 
 # 模型測試
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
-print("混淆矩陣=", cm)
-accuracy = round(accuracy_score(y_test, y_pred), 1)
-print("預測準確率:", round((accuracy*100), 1),
-      "%")  # SVM=80.0%, XGB=100.0%, XGB優化=100.0%
+# print("混淆矩陣=", cm)
+# 準確率
+accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
+print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
+# recall_score
+recall = round(recall_score(y_test, y_pred)*100, 1)
+print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
+# f1_score
+f1 = round(f1_score(y_test, y_pred)*100, 1)
+print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
+# auc_score
+roc_auc = round(roc_auc_score(y_test, y_pred)*100, 1)
+print(f"auc分數={roc_auc}%")  # XGB=86.7%, XGB優化=86.2%
+# 泛化能力
 scores = cross_val_score(model, x_valid,
                          y_valid, cv=10, scoring="accuracy")
-print("交叉驗證準確率：", round((scores.mean())*100, 1),
+print("CV準確率=", round((scores.mean())*100, 1),
       "%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
 
-# 預測準確率比交叉驗證高，有過擬合現象
-# 因數據分布不均，交叉驗證可能有偏差，超參數搜尋也有偏差且範圍無法準確找出
-# 建議先以SVM的預測準確率80.0%為主
+# 結果分析
+# 因數據分布不均，所以先看recall跟f1_score，因看資料分布擁有較多高缺陷，所以猜測公司可能希望盡量抓出疑似缺陷避免漏掉，因此主看recall
+# 準確率與CV準確率相近，模型具有穩定性
+# auc分數86.7%表現良好=對於正負類預測良好，但還可改進，ex:增加低缺陷資料、再正規化、調整測試集數量
+# 看要不要調整分類閾值
