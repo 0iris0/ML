@@ -1,3 +1,5 @@
+import shap
+import xgboost as xgb
 from sklearn.metrics import f1_score, roc_auc_score, recall_score, precision_score
 from matplotlib import rc
 from scipy.stats import median_abs_deviation
@@ -16,7 +18,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 # 預測是否為缺陷
-# 初評模型可選用logistic,svm,XGBoost來比較
+# 因目標是二分類，初評模型可選用logistic,svm,XGBoost來比較
 
 # 匯入資料
 data = pd.read_csv("manufacturing_defect_dataset.csv")
@@ -30,8 +32,16 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 # print(data.isnull().sum())  # 無缺失值
 # print(data.nunique())
 
-# 分析目標變數
-# 類別比例檢查
+# 資料轉換
+
+# 檢視缺失值
+# sns.heatmap(data.isnull(), cmap="plasma")
+# plt.title("缺失值分佈")
+# plt.show()  # 無缺失值,如有缺失則進行填補
+
+# 資料填補
+
+# 分析目標變數,類別比例檢查
 # print(data["DefectStatus"].value_counts(normalize=True)*100) #1=High Defects占84%, 0=Low Defects占16%
 # sns.countplot(x="DefectStatus", data=data)
 rc("font", family='Microsoft JhengHei')
@@ -39,7 +49,7 @@ plt.rcParams['axes.formatter.useoffset'] = False
 # plt.title("目標變數分布")
 # plt.show()
 
-# 分析各個數值特徵
+# 視覺化數值特徵
 num_features = data.select_dtypes(include=["int64", "float64"]).columns
 # for feature in num_features:
 #     plt.figure(figsize=(10, 5))
@@ -48,38 +58,6 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 #     plt.xlabel(feature)
 #     plt.ylabel("frequency")
 #     plt.show()
-# 檢定常態性
-# 用hist看
-# for i, feature in enumerate(features, 1):
-#     plt.subplot(rows, 3, i)
-#     plt.hist(x[feature], alpha=0.7, label=feature)
-#     plt.title("is normal?")
-#     plt.show()  # 非常態分佈
-# 用QQ-plot看
-# for i, feature in enumerate(features, 1):
-#     plt.subplot(rows, 3, i)
-#     stats.probplot(x[feature], dist="norm", plot=plt)
-#     plt.title("is normal?")
-# plt.show() # 非常態分佈
-# 統計檢定
-# for i, feature in enumerate(features, 1):
-#     mean = np.mean(x[feature])
-#     std = np.std(x[feature], ddof=1)
-#     stat, p = stats.kstest(x[feature], "norm", args=(mean, std))
-#     if p > 0.05:
-#         print("資料常態分佈")
-#     else:
-#         print("資料非常態分佈")
-# 檢視異常值
-# for feature in num_features:
-#     plt.figure(figsize=(10, 5))
-#     sns.boxplot(x=data[feature])
-#     plt.title(f"{feature}箱型圖")
-#     plt.show()
-# 檢視缺失值
-# sns.heatmap(data.isnull(), cmap="plasma")
-# plt.title("缺失值分佈")
-# plt.show()  # 無缺失值
 
 # 視覺化特徵與目標變數之關係
 # for feature in num_features:
@@ -89,14 +67,44 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 #     plt.xlabel(feature)
 #     plt.ylabel("DefectStatus")
 #     plt.show()
+
+# 檢定常態性_用hist看
+# for i, feature in enumerate(features, 1):
+#     plt.subplot(rows, 3, i)
+#     plt.hist(x[feature], alpha=0.7, label=feature)
+#     plt.title("is normal?")
+#     plt.show()  # 非常態分佈
+# 檢定常態性_用QQ-plot看
+# for i, feature in enumerate(features, 1):
+#     plt.subplot(rows, 3, i)
+#     stats.probplot(x[feature], dist="norm", plot=plt)
+#     plt.title("is normal?")
+# plt.show() # 非常態分佈
+# 檢定常態性_統計檢定
+# for i, feature in enumerate(features, 1):
+#     mean = np.mean(x[feature])
+#     std = np.std(x[feature], ddof=1)
+#     stat, p = stats.kstest(x[feature], "norm", args=(mean, std))
+#     if p > 0.05:
+#         print("資料常態分佈")
+#     else:
+#         print("資料非常態分佈")
+
+# 資料探勘
 # 觀察相關性
-# cor = data.corr()
+# cor = data.corr(method='spearman')#非常態
 # plt.figure(figsize=(10, 10))
 # sns.heatmap(cor, cmap="coolwarm", annot=True, fmt=".2f")
 # plt.title("特徵相關性熱力圖")
 # plt.show()  #相關性低,無共線性
 
-# 資料探勘
+# 檢視異常值
+# for feature in num_features:
+#     plt.figure(figsize=(10, 5))
+#     sns.boxplot(x=data[feature])
+#     plt.title(f"{feature}箱型圖")
+#     plt.show()
+
 # 排除異常值_IsolationForest
 iso_forest = IsolationForest(
     contamination=0.05, random_state=11)  # 用於高維且能檢測非線性
@@ -136,6 +144,17 @@ x_train, x_valid, y_train, y_valid = train_test_split(
 # x_train_scalered = scaler.fit_transform(x_train)  # 用XGBoost不用正規化
 # x_valid_scalered = scaler.transform(x_valid)
 # x_test_scalered = scaler.transform(x_test)
+
+# 特徵重要性
+model = xgb.XGBClassifier()
+model.fit(data_x, data_y)
+import_features = pd.DataFrame(
+    {"Feature": data_x.columns, "Importance": model.feature_importances_})
+# print(import_features)
+# 創建 SHAP 解釋器
+# explainer = shap.Explainer(model)
+# shap_values = explainer(x_test)
+# print(shap_values)
 
 # 建模
 # 非線性SVM
@@ -179,13 +198,15 @@ print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
 f1 = round(f1_score(y_test, y_pred)*100, 1)
 print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
 # auc_score
-roc_auc = round(roc_auc_score(y_test, y_pred)*100, 1)
-print(f"auc分數={roc_auc}%")  # XGB=86.7%, XGB優化=86.2%
+y_prob = model.predict_proba(x_test)[:, 1]
+roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
+print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
 # 泛化能力
 scores = cross_val_score(model, x_valid,
                          y_valid, cv=10, scoring="accuracy")
 print("CV準確率=", round((scores.mean())*100, 1),
       "%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
+
 
 # 結果分析
 # 因數據分布不均，所以先看recall跟f1_score，因看資料分布擁有較多高缺陷，所以猜測公司可能希望盡量抓出疑似缺陷避免漏掉，因此主看recall
