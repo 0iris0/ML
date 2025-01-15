@@ -176,7 +176,7 @@ model.fit(x_train, y_train)
 #     estimator=model,
 #     param_distributions=param_dist,
 #     n_iter=30,
-#     scoring="accuracy",
+#     scoring="f1",
 #     cv=10
 # )
 # rscv.fit(x_valid, y_valid)
@@ -203,7 +203,7 @@ roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
 print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
 # 泛化能力
 scores = cross_val_score(model, x_valid,
-                         y_valid, cv=10, scoring="accuracy")
+                         y_valid, cv=10, scoring="f1")
 print("CV準確率=", round((scores.mean())*100, 1),
       "%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
 
