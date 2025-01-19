@@ -68,6 +68,7 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 #     plt.ylabel("DefectStatus")
 #     plt.show()
 
+# 資料探勘
 # 檢定常態性_用hist看
 # for i, feature in enumerate(features, 1):
 #     plt.subplot(rows, 3, i)
@@ -90,7 +91,6 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 #     else:
 #         print("資料非常態分佈")
 
-# 資料探勘
 # 觀察相關性
 # cor = data.corr(method='spearman')#非常態
 # plt.figure(figsize=(10, 10))
@@ -98,6 +98,7 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 # plt.title("特徵相關性熱力圖")
 # plt.show()  #相關性低,無共線性
 
+#資料清理
 # 檢視異常值
 # for feature in num_features:
 #     plt.figure(figsize=(10, 5))
@@ -211,5 +212,5 @@ print("CV準確率=", round((scores.mean())*100, 1),
 # 結果分析
 # 因數據分布不均，所以先看recall跟f1_score，因看資料分布擁有較多高缺陷，所以猜測公司可能希望盡量抓出疑似缺陷避免漏掉，因此主看recall
 # 準確率與CV準確率相近，模型具有穩定性
-# auc分數86.7%表現良好=對於正負類預測良好，但還可改進，ex:增加低缺陷資料、再正規化、調整測試集數量
+# auc分數86.2%表現良好=對於正負類預測良好，但還可改進，ex:增加低缺陷資料、再正規化、調整測試集數量
 # 看要不要調整分類閾值
