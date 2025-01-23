@@ -32,21 +32,32 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 # print(data.isnull().sum())  # 無缺失值
 # print(data.nunique())
 
-# 資料轉換
+#EDA
+# 分析目標變數,類別比例檢查
+# print(data["DefectStatus"].value_counts(normalize=True)*100) #1=High Defects占84%, 0=Low Defects占16%
+# sns.countplot(x="DefectStatus", data=data)
+rc("font", family='Microsoft JhengHei')
+plt.rcParams['axes.formatter.useoffset'] = False
+# plt.title("目標變數分布")
+# plt.show()
 
-# 檢視缺失值
-# sns.heatmap(data.isnull(), cmap="plasma")
-# plt.title("缺失值分佈")
-# plt.show()  # 無缺失值,如有缺失則進行填補
-
-# 資料填補
-
-# 資料清理
-# 檢視異常值
+# 視覺化數值特徵
+num_features = data.select_dtypes(include=["int64", "float64"]).columns
 # for feature in num_features:
 #     plt.figure(figsize=(10, 5))
-#     sns.boxplot(x=data[feature])
-#     plt.title(f"{feature}箱型圖")
+#     sns.histplot(data[feature], kde=True)
+#     plt.title(f"{feature}數值分佈")
+#     plt.xlabel(feature)
+#     plt.ylabel("frequency")
+#     plt.show()
+
+# 視覺化特徵與目標變數之關係
+# for feature in num_features:
+#     plt.figure(figsize=(10, 5))
+#     plt.scatter(data[feature], data["DefectStatus"], alpha=0.2)
+#     plt.title(f"{feature} vs DefectStatus")
+#     plt.xlabel(feature)
+#     plt.ylabel("DefectStatus")
 #     plt.show()
 
 # 檢定常態性_用hist看
@@ -70,6 +81,23 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 #         print("資料常態分佈")
 #     else:
 #         print("資料非常態分佈")
+
+# 資料清洗
+#資料轉換 #本資料集皆為數值
+
+# 檢視缺失值
+# sns.heatmap(data.isnull(), cmap="plasma")
+# plt.title("缺失值分佈")
+# plt.show()  # 無缺失值,如有缺失則進行填補
+
+# 資料填補 #因特徵皆為數值，以KNN(K=3)的mean填補
+
+# 檢視異常值
+# for feature in num_features:
+#     plt.figure(figsize=(10, 5))
+#     sns.boxplot(x=data[feature])
+#     plt.title(f"{feature}箱型圖")
+#     plt.show()
 
 # 排除異常值_IsolationForest
 iso_forest = IsolationForest(
@@ -100,33 +128,6 @@ data = data[data["is_outlier"] == 1].drop(columns=["is_outlier"])  # n=3078
 # print(data)
 
 # 資料探勘
-# 分析目標變數,類別比例檢查
-# print(data["DefectStatus"].value_counts(normalize=True)*100) #1=High Defects占84%, 0=Low Defects占16%
-# sns.countplot(x="DefectStatus", data=data)
-rc("font", family='Microsoft JhengHei')
-plt.rcParams['axes.formatter.useoffset'] = False
-# plt.title("目標變數分布")
-# plt.show()
-
-# 視覺化數值特徵
-num_features = data.select_dtypes(include=["int64", "float64"]).columns
-# for feature in num_features:
-#     plt.figure(figsize=(10, 5))
-#     sns.histplot(data[feature], kde=True)
-#     plt.title(f"{feature}數值分佈")
-#     plt.xlabel(feature)
-#     plt.ylabel("frequency")
-#     plt.show()
-
-# 視覺化特徵與目標變數之關係
-# for feature in num_features:
-#     plt.figure(figsize=(10, 5))
-#     plt.scatter(data[feature], data["DefectStatus"], alpha=0.2)
-#     plt.title(f"{feature} vs DefectStatus")
-#     plt.xlabel(feature)
-#     plt.ylabel("DefectStatus")
-#     plt.show()
-
 # 觀察相關性
 # cor = data.corr(method='spearman')#非常態
 # plt.figure(figsize=(10, 10))
@@ -134,6 +135,7 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 # plt.title("特徵相關性熱力圖")
 # plt.show()  #相關性低,非線性相關,無共線性
 
+#特徵工程
 # 特徵重要性
 data_x = data.drop(columns=["DefectStatus"])
 data_y = data["DefectStatus"]
@@ -142,10 +144,6 @@ model.fit(data_x, data_y)
 import_features = pd.DataFrame(
     {"Feature": data_x.columns, "Importance": model.feature_importances_})
 # print(import_features)
-# 創建 SHAP 解釋器
-# explainer = shap.Explainer(model)
-# shap_values = explainer(x_test)
-# print(shap_values)
 
 # 前處理
 x_train, x_test, y_train, y_test = train_test_split(
@@ -191,6 +189,10 @@ model = rscv.best_estimator_
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
 # print("混淆矩陣=", cm)
+# 創建 SHAP 解釋器
+# explainer = shap.Explainer(model)
+# shap_values = explainer(x_test)
+# print(shap_values)
 # 準確率
 accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
 print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
