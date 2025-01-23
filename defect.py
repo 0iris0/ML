@@ -163,28 +163,29 @@ x_train, x_valid, y_train, y_valid = train_test_split(
 # model = SVC(kernel="rbf", C=1.0, gamma=0.1, random_state=0)
 # model.fit(x_train_scalered, y_train)
 # XGBoost
-model = XGBClassifier()
+model = XGBClassifier(scale_pos_weight=y_train.value_counts()[
+                      0]/y_train.value_counts()[1])
 model.fit(x_train, y_train)
 
 # XGB超參數優化
-# param_dist = {
-#     'n_estimators': np.arange(50, 300),
-#     'max_depth': [3, 5, 7, 9],
-#     'learning_rate': np.linspace(0.01, 0.3, 10),
-#     'subsample': [0.6, 0.8, 1.0],
-#     'colsample_bytree': [0.6, 0.8, 1.0]
-# }
-# rscv = RandomizedSearchCV(
-#     estimator=model,
-#     param_distributions=param_dist,
-#     n_iter=30,
-#     scoring="accuracy",
-#     cv=10
-# )
-# rscv.fit(x_valid, y_valid)
-# print("優化最佳參數:", rscv.best_params_)
-# print("優化最佳準確率:", round((rscv.best_score_)*100, 1), "%")
-# model = rscv.best_estimator_
+param_dist = {
+    'n_estimators': np.arange(50, 100, 300),
+    'max_depth': [3, 5, 7, 9],
+    'learning_rate': np.linspace(0.05, 0.2),
+    'subsample': [0.6, 0.8, 1.0],
+    'colsample_bytree': [0.6, 0.8, 1.0]
+}
+rscv = RandomizedSearchCV(
+    estimator=model,
+    param_distributions=param_dist,
+    n_iter=30,
+    scoring="accuracy",
+    cv=10
+)
+rscv.fit(x_valid, y_valid)
+print("優化最佳參數:", rscv.best_params_)
+print("優化最佳準確率:", round((rscv.best_score_)*100, 1), "%")
+model = rscv.best_estimator_
 
 # 模型測試
 y_pred = model.predict(x_test)
@@ -192,22 +193,22 @@ cm = confusion_matrix(y_test, y_pred)
 # print("混淆矩陣=", cm)
 # 準確率
 accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
-# print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
-# # recall_score
-# recall = round(recall_score(y_test, y_pred)*100, 1)
-# print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
-# # f1_score
-# f1 = round(f1_score(y_test, y_pred)*100, 1)
-# print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
-# # auc_score
-# y_prob = model.predict_proba(x_test)[:, 1]
-# roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
-# print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
-# # 泛化能力
-# scores = cross_val_score(model, x_valid,
-#                          y_valid, cv=10, scoring="roc_auc")
-# print("CV準確率=", round((scores.mean())*100, 1),
-#       "%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
+print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
+# recall_score
+recall = round(recall_score(y_test, y_pred)*100, 1)
+print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
+# f1_score
+f1 = round(f1_score(y_test, y_pred)*100, 1)
+print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
+# auc_score
+y_prob = model.predict_proba(x_test)[:, 1]
+roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
+print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
+# 泛化能力
+scores = cross_val_score(model, x_valid,
+                         y_valid, cv=10, scoring="roc_auc")
+print("CV準確率=", round((scores.mean())*100, 1),
+      "%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
 
 
 # 結果分析
