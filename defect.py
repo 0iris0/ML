@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 # 預測是否為缺陷
-# 因目標是二分類，初評模型可選用logistic,svm,XGBoost來比較
+# 因目標是二分類，初評模型可選用logistic,svm,樹模型來比較
 
 # 匯入資料
 data = pd.read_csv("manufacturing_defect_dataset.csv")
@@ -41,6 +41,65 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 
 # 資料填補
 
+# 資料清理
+# 檢視異常值
+# for feature in num_features:
+#     plt.figure(figsize=(10, 5))
+#     sns.boxplot(x=data[feature])
+#     plt.title(f"{feature}箱型圖")
+#     plt.show()
+
+# 檢定常態性_用hist看
+# for i, feature in enumerate(features, 1):
+#     plt.subplot(rows, 3, i)
+#     plt.hist(x[feature], alpha=0.7, label=feature)
+#     plt.title("is normal?")
+#     plt.show()  # 非常態分佈
+# 檢定常態性_用QQ-plot看
+# for i, feature in enumerate(features, 1):
+#     plt.subplot(rows, 3, i)
+#     stats.probplot(x[feature], dist="norm", plot=plt)
+#     plt.title("is normal?")
+# plt.show() # 非常態分佈
+# 檢定常態性_統計檢定
+# for i, feature in enumerate(features, 1):
+#     mean = np.mean(x[feature])
+#     std = np.std(x[feature], ddof=1)
+#     stat, p = stats.kstest(x[feature], "norm", args=(mean, std))
+#     if p > 0.05:
+#         print("資料常態分佈")
+#     else:
+#         print("資料非常態分佈")
+
+# 排除異常值_IsolationForest
+iso_forest = IsolationForest(
+    n_estimators=100, contamination=0.05, random_state=11)  # 用於多特徵且能檢測非線性
+pred_outlier = iso_forest.fit_predict(data.drop(columns=["DefectStatus"]))
+data["is_outlier"] = pred_outlier
+data = data[data["is_outlier"] == 1].drop(columns=["is_outlier"])  # n=3078
+# 排除異常值_modified_z_score
+# for col in num_features:
+#     median=data[col].median()
+#     mad=median_absolute_deviation(data[col])#用於近似常態,維度小,數據量少,異常值較少
+#     data["modified_z_score"]=0.6745*(data[col]-median)/mad
+# data=data[data["modified_z_score"].abs()<3.5].drop(columns=["modified_z_score"])
+# 排除異常值_1.5IQR
+# list_x_names = list(data.columns)
+# for d in list_x_names:
+#     if d == "DefectStatus":
+#         break
+#     else:
+#         per25 = np.percentile(data[d], 25)
+#         per75 = np.percentile(data[d], 75)
+#         IQR = per75-per25
+#         outlier_max = per75+1.5*IQR
+#         outlier_min = per25-1.5*IQR
+#         data = data[(data[d] >= outlier_min) & (
+#             data[d] <= outlier_max)]  # 用於常態資料或近似常態
+# data = data.reset_index(drop=True)# n=3240
+# print(data)
+
+# 資料探勘
 # 分析目標變數,類別比例檢查
 # print(data["DefectStatus"].value_counts(normalize=True)*100) #1=High Defects占84%, 0=Low Defects占16%
 # sns.countplot(x="DefectStatus", data=data)
@@ -68,85 +127,16 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 #     plt.ylabel("DefectStatus")
 #     plt.show()
 
-# 資料探勘
-# 檢定常態性_用hist看
-# for i, feature in enumerate(features, 1):
-#     plt.subplot(rows, 3, i)
-#     plt.hist(x[feature], alpha=0.7, label=feature)
-#     plt.title("is normal?")
-#     plt.show()  # 非常態分佈
-# 檢定常態性_用QQ-plot看
-# for i, feature in enumerate(features, 1):
-#     plt.subplot(rows, 3, i)
-#     stats.probplot(x[feature], dist="norm", plot=plt)
-#     plt.title("is normal?")
-# plt.show() # 非常態分佈
-# 檢定常態性_統計檢定
-# for i, feature in enumerate(features, 1):
-#     mean = np.mean(x[feature])
-#     std = np.std(x[feature], ddof=1)
-#     stat, p = stats.kstest(x[feature], "norm", args=(mean, std))
-#     if p > 0.05:
-#         print("資料常態分佈")
-#     else:
-#         print("資料非常態分佈")
-
 # 觀察相關性
 # cor = data.corr(method='spearman')#非常態
 # plt.figure(figsize=(10, 10))
 # sns.heatmap(cor, cmap="coolwarm", annot=True, fmt=".2f")
 # plt.title("特徵相關性熱力圖")
-# plt.show()  #相關性低,無共線性
-
-#資料清理
-# 檢視異常值
-# for feature in num_features:
-#     plt.figure(figsize=(10, 5))
-#     sns.boxplot(x=data[feature])
-#     plt.title(f"{feature}箱型圖")
-#     plt.show()
-
-# 排除異常值_IsolationForest
-iso_forest = IsolationForest(
-    contamination=0.05, random_state=11)  # 用於高維且能檢測非線性
-outliers = iso_forest.fit_predict(data.drop(columns=["DefectStatus"]))
-data["is_outlier"] = outliers
-data = data[data["is_outlier"] == 1].drop(columns=["is_outlier"])  # n=3078
-# 排除異常值_modified_z_score
-# for col in num_features:
-#     median=data[col].median()
-#     mad=median_absolute_deviation(data[col])#用於近似常態,維度小,數據量少,異常值較少
-#     data["modified_z_score"]=0.6745*(data[col]-median)/mad
-# data=data[data["modified_z_score"].abs()<3.5].drop(columns=["modified_z_score"])
-# 排除異常值_1.5IQR
-# list_x_names = list(data.columns)
-# for d in list_x_names:
-#     if d == "DefectStatus":
-#         break
-#     else:
-#         per25 = np.percentile(data[d], 25)
-#         per75 = np.percentile(data[d], 75)
-#         IQR = per75-per25
-#         outlier_max = per75+1.5*IQR
-#         outlier_min = per25-1.5*IQR
-#         data = data[(data[d] >= outlier_min) & (data[d] <= outlier_max)]#用於常態資料
-# data = data.reset_index(drop=True)
-# print(data)
-
-# 前處理
-data_x = data.drop(columns=["DefectStatus"])
-data_y = data["DefectStatus"]
-x_train, x_test, y_train, y_test = train_test_split(
-    data_x, data_y, test_size=0.2, random_state=6)
-x_train, x_valid, y_train, y_valid = train_test_split(
-    x_train, y_train, test_size=0.2, random_state=11)
-# 正規化
-# scaler = MinMaxScaler()
-# x_train_scalered = scaler.fit_transform(x_train)  # 用XGBoost不用正規化
-# x_valid_scalered = scaler.transform(x_valid)
-# x_test_scalered = scaler.transform(x_test)
+# plt.show()  #相關性低,非線性相關,無共線性
 
 # 特徵重要性
+data_x = data.drop(columns=["DefectStatus"])
+data_y = data["DefectStatus"]
 model = xgb.XGBClassifier()
 model.fit(data_x, data_y)
 import_features = pd.DataFrame(
@@ -156,6 +146,17 @@ import_features = pd.DataFrame(
 # explainer = shap.Explainer(model)
 # shap_values = explainer(x_test)
 # print(shap_values)
+
+# 前處理
+x_train, x_test, y_train, y_test = train_test_split(
+    data_x, data_y, test_size=0.2, random_state=6)
+x_train, x_valid, y_train, y_valid = train_test_split(
+    x_train, y_train, test_size=0.2, random_state=11)
+# 正規化
+# scaler = MinMaxScaler()
+# x_train_scalered = scaler.fit_transform(x_train)  # 用XGBoost不用正規化
+# x_valid_scalered = scaler.transform(x_valid)
+# x_test_scalered = scaler.transform(x_test)
 
 # 建模
 # 非線性SVM
@@ -191,22 +192,22 @@ cm = confusion_matrix(y_test, y_pred)
 # print("混淆矩陣=", cm)
 # 準確率
 accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
-print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
-# recall_score
-recall = round(recall_score(y_test, y_pred)*100, 1)
-print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
-# f1_score
-f1 = round(f1_score(y_test, y_pred)*100, 1)
-print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
-# auc_score
-y_prob = model.predict_proba(x_test)[:, 1]
-roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
-print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
-# 泛化能力
-scores = cross_val_score(model, x_valid,
-                         y_valid, cv=10, scoring="roc_auc")
-print("CV準確率=", round((scores.mean())*100, 1),
-      "%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
+# print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
+# # recall_score
+# recall = round(recall_score(y_test, y_pred)*100, 1)
+# print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
+# # f1_score
+# f1 = round(f1_score(y_test, y_pred)*100, 1)
+# print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
+# # auc_score
+# y_prob = model.predict_proba(x_test)[:, 1]
+# roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
+# print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
+# # 泛化能力
+# scores = cross_val_score(model, x_valid,
+#                          y_valid, cv=10, scoring="roc_auc")
+# print("CV準確率=", round((scores.mean())*100, 1),
+#       "%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
 
 
 # 結果分析
