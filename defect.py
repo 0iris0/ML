@@ -32,7 +32,25 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 # print(data.isnull().sum())  # 無缺失值
 # print(data.nunique())
 
-#EDA
+# 資料轉換 #本資料集皆為數值
+
+# 檢視缺失值
+# sns.heatmap(data.isnull(), cmap="plasma")
+# plt.title("缺失值分佈")
+# plt.show()  # 無缺失值,如有缺失則進行填補
+
+# 資料填補 #因特徵皆為數值，預設以KNN(K=3)的mean填補
+
+# 資料清理(排除重複)
+
+# 檢視異常值
+# for feature in num_features:
+#     plt.figure(figsize=(10, 5))
+#     sns.boxplot(x=data[feature])
+#     plt.title(f"{feature}箱型圖")
+#     plt.show()
+
+# EDA
 # 分析目標變數,類別比例檢查
 # print(data["DefectStatus"].value_counts(normalize=True)*100) #1=High Defects占84%, 0=Low Defects占16%
 # sns.countplot(x="DefectStatus", data=data)
@@ -49,15 +67,6 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 #     plt.title(f"{feature}數值分佈")
 #     plt.xlabel(feature)
 #     plt.ylabel("frequency")
-#     plt.show()
-
-# 視覺化特徵與目標變數之關係
-# for feature in num_features:
-#     plt.figure(figsize=(10, 5))
-#     plt.scatter(data[feature], data["DefectStatus"], alpha=0.2)
-#     plt.title(f"{feature} vs DefectStatus")
-#     plt.xlabel(feature)
-#     plt.ylabel("DefectStatus")
 #     plt.show()
 
 # 檢定常態性_用hist看
@@ -82,21 +91,13 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 #     else:
 #         print("資料非常態分佈")
 
-# 資料清洗
-#資料轉換 #本資料集皆為數值
-
-# 檢視缺失值
-# sns.heatmap(data.isnull(), cmap="plasma")
-# plt.title("缺失值分佈")
-# plt.show()  # 無缺失值,如有缺失則進行填補
-
-# 資料填補 #因特徵皆為數值，以KNN(K=3)的mean填補
-
-# 檢視異常值
+# 視覺化特徵與目標變數之關係
 # for feature in num_features:
 #     plt.figure(figsize=(10, 5))
-#     sns.boxplot(x=data[feature])
-#     plt.title(f"{feature}箱型圖")
+#     plt.scatter(data[feature], data["DefectStatus"], alpha=0.2)
+#     plt.title(f"{feature} vs DefectStatus")
+#     plt.xlabel(feature)
+#     plt.ylabel("DefectStatus")
 #     plt.show()
 
 # 排除異常值_IsolationForest
@@ -127,15 +128,14 @@ data = data[data["is_outlier"] == 1].drop(columns=["is_outlier"])  # n=3078
 # data = data.reset_index(drop=True)# n=3240
 # print(data)
 
-# 資料探勘
 # 觀察相關性
 # cor = data.corr(method='spearman')#非常態
 # plt.figure(figsize=(10, 10))
 # sns.heatmap(cor, cmap="coolwarm", annot=True, fmt=".2f")
 # plt.title("特徵相關性熱力圖")
-# plt.show()  #相關性低,非線性相關,無共線性
+# plt.show()  #相關性極低,非線性相關
 
-#特徵工程
+# 特徵工程
 # 特徵重要性
 data_x = data.drop(columns=["DefectStatus"])
 data_y = data["DefectStatus"]
@@ -166,51 +166,51 @@ model = XGBClassifier(scale_pos_weight=y_train.value_counts()[
 model.fit(x_train, y_train)
 
 # XGB超參數優化
-param_dist = {
-    'n_estimators': np.arange(50, 100, 300),
-    'max_depth': [3, 5, 7, 9],
-    'learning_rate': np.linspace(0.05, 0.2),
-    'subsample': [0.6, 0.8, 1.0],
-    'colsample_bytree': [0.6, 0.8, 1.0]
-}
-rscv = RandomizedSearchCV(
-    estimator=model,
-    param_distributions=param_dist,
-    n_iter=30,
-    scoring="accuracy",
-    cv=10
-)
-rscv.fit(x_valid, y_valid)
-print("優化最佳參數:", rscv.best_params_)
-print("優化最佳準確率:", round((rscv.best_score_)*100, 1), "%")
-model = rscv.best_estimator_
+# param_dist = {
+#     'n_estimators': np.arange(50, 100, 300),
+#     'max_depth': [3, 5, 7, 9],
+#     'learning_rate': np.linspace(0.05, 0.2),
+#     'subsample': [0.6, 0.8, 1.0],
+#     'colsample_bytree': [0.6, 0.8, 1.0]
+# }
+# rscv = RandomizedSearchCV(
+#     estimator=model,
+#     param_distributions=param_dist,
+#     n_iter=30,
+#     scoring="accuracy",
+#     cv=10
+# )
+# rscv.fit(x_valid, y_valid)
+# print("優化最佳參數:", rscv.best_params_)
+# print("優化最佳準確率:", round((rscv.best_score_)*100, 1), "%")
+# model = rscv.best_estimator_
 
 # 模型測試
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
 # print("混淆矩陣=", cm)
 # 創建 SHAP 解釋器
-# explainer = shap.Explainer(model)
-# shap_values = explainer(x_test)
-# print(shap_values)
+explainer = shap.Explainer(model)
+shap_values = explainer(x_train)
+# shap.summary_plot(shap_values, x_train)
+
 # 準確率
 accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
-print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
+# print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
 # recall_score
 recall = round(recall_score(y_test, y_pred)*100, 1)
-print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
+# print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
 # f1_score
 f1 = round(f1_score(y_test, y_pred)*100, 1)
-print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
+# print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
 # auc_score
 y_prob = model.predict_proba(x_test)[:, 1]
 roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
-print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
+# print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
 # 泛化能力
 scores = cross_val_score(model, x_valid,
                          y_valid, cv=10, scoring="roc_auc")
-print("CV準確率=", round((scores.mean())*100, 1),
-      "%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
+# print("CV準確率=", round((scores.mean())*100, 1),"%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
 
 
 # 結果分析
