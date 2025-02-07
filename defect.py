@@ -30,16 +30,15 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 # print(data.head())
 # print(data.tail())
 # print(data.isnull().sum())  # 無缺失值
+# 視覺化缺失值分佈
+# sns.heatmap(data.isnull(), cmap="plasma")
+# plt.title("缺失值分佈")
+# plt.show()
 # print(data.nunique())
 
 # 資料轉換 #本資料集皆為數值
 
-# 檢視缺失值
-# sns.heatmap(data.isnull(), cmap="plasma")
-# plt.title("缺失值分佈")
-# plt.show()  # 無缺失值,如有缺失則進行填補
-
-# 資料填補 #因特徵皆為數值，預設以KNN(K=3)的mean填補
+# 資料填補 #預設數值資料以KNN(K=3)的mean填補，類別資料以mode填補
 
 # 資料清理(排除重複)
 
@@ -137,7 +136,8 @@ data = data[data["is_outlier"] == 1].drop(columns=["is_outlier"])  # n=3078
 
 # 特徵工程
 # 特徵重要性
-data_x = data.drop(columns=["DefectStatus"])
+data_x = data.drop(
+    columns=["DefectStatus", "SafetyIncidents"])
 data_y = data["DefectStatus"]
 model = xgb.XGBClassifier()
 model.fit(data_x, data_y)
@@ -166,55 +166,57 @@ model = XGBClassifier(scale_pos_weight=y_train.value_counts()[
 model.fit(x_train, y_train)
 
 # XGB超參數優化
-# param_dist = {
-#     'n_estimators': np.arange(50, 100, 300),
-#     'max_depth': [3, 5, 7, 9],
-#     'learning_rate': np.linspace(0.05, 0.2),
-#     'subsample': [0.6, 0.8, 1.0],
-#     'colsample_bytree': [0.6, 0.8, 1.0]
-# }
-# rscv = RandomizedSearchCV(
-#     estimator=model,
-#     param_distributions=param_dist,
-#     n_iter=30,
-#     scoring="accuracy",
-#     cv=10
-# )
-# rscv.fit(x_valid, y_valid)
+param_dist = {
+    'n_estimators': np.arange(50, 100, 300),
+    'max_depth': [3, 5, 7, 9],
+    'learning_rate': np.linspace(0.05, 0.2),
+    'subsample': [0.6, 0.8, 1.0],
+    'colsample_bytree': [0.6, 0.8, 1.0]
+}
+rscv = RandomizedSearchCV(
+    estimator=model,
+    param_distributions=param_dist,
+    n_iter=30,
+    scoring="accuracy",
+    cv=10
+)
+rscv.fit(x_train, y_train)
 # print("優化最佳參數:", rscv.best_params_)
 # print("優化最佳準確率:", round((rscv.best_score_)*100, 1), "%")
-# model = rscv.best_estimator_
+model = rscv.best_estimator_
+
+# 創建 SHAP 解釋器
+explainer = shap.Explainer(model)
+shap_values = explainer(x_train)
+# print(shap_values)
+# shap.summary_plot(shap_values, x_train)
 
 # 模型測試
 y_pred = model.predict(x_test)
 cm = confusion_matrix(y_test, y_pred)
 # print("混淆矩陣=", cm)
-# 創建 SHAP 解釋器
-explainer = shap.Explainer(model)
-shap_values = explainer(x_train)
-# shap.summary_plot(shap_values, x_train)
 
-# 準確率
+# 指標分數
 accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
-# print(f"準確率={accuracy}")  # SVM=80.0%, XGB=95.3%, XGB優化=95.1%
+print(f"accuracy score={accuracy}")  # SVM=80.0, XGB=95.0, XGB優化=95.1
 # recall_score
 recall = round(recall_score(y_test, y_pred)*100, 1)
-# print(f"recall分數={recall}%")  # XGB=99.2%, XGB優化=99.2%
+print(f"recall score={recall}")  # XGB=98.8, XGB優化=99.0
 # f1_score
 f1 = round(f1_score(y_test, y_pred)*100, 1)
-# print(f"f1 score={f1}%")  # XGB=97.3%, XGB優化=97.2%
+print(f"f1 score={f1}")  # XGB=97.1, XGB優化=97.2
 # auc_score
 y_prob = model.predict_proba(x_test)[:, 1]
 roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
-# print(f"auc分數={roc_auc}%")  # XGB=84.5%, XGB優化=86.2%
+print(f"auc score={roc_auc}")  # XGB=83.7, XGB優化=85.6
 # 泛化能力
 scores = cross_val_score(model, x_valid,
                          y_valid, cv=10, scoring="roc_auc")
-# print("CV準確率=", round((scores.mean())*100, 1),"%")  # SVM=83.8%, XGB=94.9%, XGB優化=95.7%
+print("CV準確度=", round((scores.mean())*100, 1),
+      "%")  # SVM=83.8%, XGB=90.8%, XGB優化=91.4%
 
 
 # 結果分析
-# 因數據分布不均，所以先看recall跟f1_score，因看資料分布擁有較多高缺陷，所以猜測公司可能希望盡量抓出疑似缺陷避免漏掉，因此主看recall
+# 因數據分布不均，所以先看recall跟f1_score，假設公司可能希望盡量抓出高缺陷避免漏掉，可看recall=99.0
 # 準確率與CV準確率相近，模型具有穩定性
-# auc分數86.2%表現良好=對於正負類預測良好，但還可改進，ex:增加低缺陷資料、再正規化、調整測試集數量
-# 看要不要調整分類閾值
+# auc score=85.6表現良好=對於正負類預測良好
