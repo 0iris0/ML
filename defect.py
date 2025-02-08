@@ -144,8 +144,7 @@ data = data[data["is_outlier"] == 1].drop(columns=["is_outlier"])  # n=3078
 
 # 特徵工程
 # 特徵重要性
-data_x = data.drop(
-    columns=["DefectStatus", "SafetyIncidents"])
+data_x = data.drop(columns=["DefectStatus", "SafetyIncidents"])
 data_y = data["DefectStatus"]
 model = xgb.XGBClassifier()
 model.fit(data_x, data_y)
@@ -203,7 +202,7 @@ shap_values = explainer(x_train)
 # print(shap_values)
 # shap.summary_plot(shap_values, x_train)
 
-# 泛化能力
+# 模型泛化能力
 scores = cross_val_score(model, x_valid,
                          y_valid, cv=10, scoring="roc_auc")
 print("CV準確度=", round((scores.mean())*100, 1),
