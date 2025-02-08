@@ -166,7 +166,7 @@ x_train, x_valid, y_train, y_valid = train_test_split(
 
 # 建模
 # logistic
-# model = LogisticRegression()
+# model = LogisticRegression(class_weight="balanced")
 # model.fit(x_train, y_train)
 
 # 非線性SVM
@@ -230,7 +230,7 @@ f1 = round(f1_score(y_test, y_pred)*100, 1)
 print(f"f1 score={f1}")  # logistic=91.2 , XGB=97.0, XGB優化=97.2
 # auc_score
 roc_auc = round(roc_auc_score(y_test, y_pred_prob)*100, 1)
-print(f"auc score={roc_auc}")  # logistic=77.7, XGB=84.7, XGB優化=86.4
+print(f"auc score={roc_auc}")  # logistic=77.7, XGB=84.7, XGB優化=85.6
 
 # ROC曲線圖
 # fpr, tpr, _ = roc_curve(y_test, y_pred_prob)
@@ -244,5 +244,5 @@ print(f"auc score={roc_auc}")  # logistic=77.7, XGB=84.7, XGB優化=86.4
 
 # 結果分析
 # 因數據分布不均，所以先看recall跟f1_score，假設公司可能希望盡量抓出高缺陷避免漏掉，可看recall=99.0
-# 準確率與CV準確率相近，模型具有穩定性
-# auc score=86.4表現良好=對於正負類預測良好
+# CV準確率達90%以上，模型具有穩定性
+# auc score表現良好=對於正負類預測良好
