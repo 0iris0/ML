@@ -1,6 +1,8 @@
+from sklearn.linear_model import LogisticRegression
+import math
 import shap
 import xgboost as xgb
-from sklearn.metrics import f1_score, roc_auc_score, recall_score, precision_score
+from sklearn.metrics import f1_score, roc_auc_score, recall_score, precision_score, roc_curve
 from matplotlib import rc
 from scipy.stats import median_abs_deviation
 from sklearn.ensemble import IsolationForest
@@ -58,6 +60,11 @@ plt.rcParams['axes.formatter.useoffset'] = False
 # plt.title("目標變數分布")
 # plt.show()
 
+# 起始資料非常態進行轉換後仍為非常態
+nor_trans_data_x = data.drop(columns=["DefectStatus"])
+nor_trans_data_x = np.log1p(nor_trans_data_x)
+# print(nor_trans_data_x)
+
 # 視覺化數值特徵
 num_features = data.select_dtypes(include=["int64", "float64"]).columns
 # for feature in num_features:
@@ -69,22 +76,23 @@ num_features = data.select_dtypes(include=["int64", "float64"]).columns
 #     plt.show()
 
 # 檢定常態性_用hist看
-# for i, feature in enumerate(features, 1):
+rows = len(num_features)//3+1
+# for i, feature in enumerate(num_features, 1):
 #     plt.subplot(rows, 3, i)
-#     plt.hist(x[feature], alpha=0.7, label=feature)
+#     plt.hist(data[feature], alpha=0.7, label=feature)
 #     plt.title("is normal?")
 #     plt.show()  # 非常態分佈
 # 檢定常態性_用QQ-plot看
-# for i, feature in enumerate(features, 1):
+# for i, feature in enumerate(num_features, 1):
 #     plt.subplot(rows, 3, i)
-#     stats.probplot(x[feature], dist="norm", plot=plt)
+#     stats.probplot(data[feature], dist="norm", plot=plt)
 #     plt.title("is normal?")
-# plt.show() # 非常態分佈
+# plt.show()  # 非常態分佈
 # 檢定常態性_統計檢定
-# for i, feature in enumerate(features, 1):
-#     mean = np.mean(x[feature])
-#     std = np.std(x[feature], ddof=1)
-#     stat, p = stats.kstest(x[feature], "norm", args=(mean, std))
+# for i, feature in enumerate(num_features, 1):
+#     mean = np.mean(data[feature])
+#     std = np.std(data[feature], ddof=1)
+#     stat, p = stats.kstest(data[feature], "norm", args=(mean, std))
 #     if p > 0.05:
 #         print("資料常態分佈")
 #     else:
@@ -157,14 +165,18 @@ x_train, x_valid, y_train, y_valid = train_test_split(
 # x_test_scalered = scaler.transform(x_test)
 
 # 建模
+# logistic
+# model = LogisticRegression()
+# model.fit(x_train, y_train)
+
 # 非線性SVM
-# model = SVC(kernel="rbf", C=1.0, gamma=0.1, random_state=0)
+# model = SVC(kernel="rbf", C=1.0, gamma=0.1, random_state=0, probability=True)
 # model.fit(x_train_scalered, y_train)
+
 # XGBoost
 model = XGBClassifier(scale_pos_weight=y_train.value_counts()[
                       0]/y_train.value_counts()[1])
 model.fit(x_train, y_train)
-
 # XGB超參數優化
 param_dist = {
     'n_estimators': np.arange(50, 100, 300),
@@ -191,32 +203,46 @@ shap_values = explainer(x_train)
 # print(shap_values)
 # shap.summary_plot(shap_values, x_train)
 
-# 模型測試
-y_pred = model.predict(x_test)
-cm = confusion_matrix(y_test, y_pred)
-# print("混淆矩陣=", cm)
-
-# 指標分數
-accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
-print(f"accuracy score={accuracy}")  # SVM=80.0, XGB=95.0, XGB優化=95.1
-# recall_score
-recall = round(recall_score(y_test, y_pred)*100, 1)
-print(f"recall score={recall}")  # XGB=98.8, XGB優化=99.0
-# f1_score
-f1 = round(f1_score(y_test, y_pred)*100, 1)
-print(f"f1 score={f1}")  # XGB=97.1, XGB優化=97.2
-# auc_score
-y_prob = model.predict_proba(x_test)[:, 1]
-roc_auc = round(roc_auc_score(y_test, y_prob)*100, 1)
-print(f"auc score={roc_auc}")  # XGB=83.7, XGB優化=85.6
 # 泛化能力
 scores = cross_val_score(model, x_valid,
                          y_valid, cv=10, scoring="roc_auc")
 print("CV準確度=", round((scores.mean())*100, 1),
-      "%")  # SVM=83.8%, XGB=90.8%, XGB優化=91.4%
+      "%")  # logistic=85.4%, SVM=83.8%, XGB=90.5%, XGB優化=92.4%
 
+# 模型測試
+y_pred = model.predict(x_test)
+y_pred_prob = model.predict_proba(x_test)[:, 1]
+cm = confusion_matrix(y_test, y_pred)
+# print("混淆矩陣=", cm)
+
+# 指標分數
+# accuracy
+accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
+print(f"accuracy score={accuracy}")  # logistic=84.3, XGB=94.8, XGB優化=95.1
+# precision
+precision = round(precision_score(y_test, y_pred)*100, 1)
+print(f"precision score={precision}")  # logistic=85.9, XGB=95.5, XGB優化=95.4
+# recall_score
+recall = round(recall_score(y_test, y_pred)*100, 1)
+print(f"recall score={recall}")  # logistic=97.3 , XGB=98.5, XGB優化=99.0
+# f1_score
+f1 = round(f1_score(y_test, y_pred)*100, 1)
+print(f"f1 score={f1}")  # logistic=91.2 , XGB=97.0, XGB優化=97.2
+# auc_score
+roc_auc = round(roc_auc_score(y_test, y_pred_prob)*100, 1)
+print(f"auc score={roc_auc}")  # logistic=77.7, XGB=84.7, XGB優化=86.4
+
+# ROC曲線圖
+# fpr, tpr, _ = roc_curve(y_test, y_pred_prob)
+# plt.figure(figsize=(8, 6))
+# plt.plot(fpr, tpr, color="b", label=f"ROC Curve(AUC={roc_auc:.2f})")
+# plt.xlabel("False Positive Rate")
+# plt.ylabel("True Positive Rate")
+# plt.title("ROC Curve")
+# plt.legend()
+# plt.show()
 
 # 結果分析
 # 因數據分布不均，所以先看recall跟f1_score，假設公司可能希望盡量抓出高缺陷避免漏掉，可看recall=99.0
 # 準確率與CV準確率相近，模型具有穩定性
-# auc score=85.6表現良好=對於正負類預測良好
+# auc score=86.4表現良好=對於正負類預測良好
