@@ -38,18 +38,7 @@ data = pd.read_csv("manufacturing_defect_dataset.csv")
 # plt.show()
 # print(data.nunique())
 
-# 資料轉換 #本資料集皆為數值
-
-# 資料填補 #預設數值資料以KNN(K=3)的mean填補，類別資料以mode填補
-
 # 資料清理(排除重複)
-
-# 檢視異常值
-# for feature in num_features:
-#     plt.figure(figsize=(10, 5))
-#     sns.boxplot(x=data[feature])
-#     plt.title(f"{feature}箱型圖")
-#     plt.show()
 
 # EDA
 # 分析目標變數,類別比例檢查
@@ -82,12 +71,6 @@ rows = len(num_features)//3+1
 #     plt.hist(data[feature], alpha=0.7, label=feature)
 #     plt.title("is normal?")
 #     plt.show()  # 非常態分佈
-# 檢定常態性_用QQ-plot看
-# for i, feature in enumerate(num_features, 1):
-#     plt.subplot(rows, 3, i)
-#     stats.probplot(data[feature], dist="norm", plot=plt)
-#     plt.title("is normal?")
-# plt.show()  # 非常態分佈
 # 檢定常態性_統計檢定
 # for i, feature in enumerate(num_features, 1):
 #     mean = np.mean(data[feature])
@@ -107,32 +90,19 @@ rows = len(num_features)//3+1
 #     plt.ylabel("DefectStatus")
 #     plt.show()
 
+# 檢視異常值
+# for feature in num_features:
+#     plt.figure(figsize=(10, 5))
+#     sns.boxplot(x=data[feature])
+#     plt.title(f"{feature}箱型圖")
+#     plt.show()
+
 # 排除異常值_IsolationForest
 iso_forest = IsolationForest(
     n_estimators=100, contamination=0.05, random_state=11)  # 用於多特徵且能檢測非線性
 pred_outlier = iso_forest.fit_predict(data.drop(columns=["DefectStatus"]))
 data["is_outlier"] = pred_outlier
 data = data[data["is_outlier"] == 1].drop(columns=["is_outlier"])  # n=3078
-# 排除異常值_modified_z_score
-# for col in num_features:
-#     median=data[col].median()
-#     mad=median_absolute_deviation(data[col])#用於近似常態,維度小,數據量少,異常值較少
-#     data["modified_z_score"]=0.6745*(data[col]-median)/mad
-# data=data[data["modified_z_score"].abs()<3.5].drop(columns=["modified_z_score"])
-# 排除異常值_1.5IQR
-# list_x_names = list(data.columns)
-# for d in list_x_names:
-#     if d == "DefectStatus":
-#         break
-#     else:
-#         per25 = np.percentile(data[d], 25)
-#         per75 = np.percentile(data[d], 75)
-#         IQR = per75-per25
-#         outlier_max = per75+1.5*IQR
-#         outlier_min = per25-1.5*IQR
-#         data = data[(data[d] >= outlier_min) & (
-#             data[d] <= outlier_max)]  # 用於常態資料或近似常態
-# data = data.reset_index(drop=True)# n=3240
 # print(data)
 
 # 觀察相關性
@@ -142,15 +112,14 @@ data = data[data["is_outlier"] == 1].drop(columns=["is_outlier"])  # n=3078
 # plt.title("特徵相關性熱力圖")
 # plt.show()  #相關性極低,非線性相關
 
-# 特徵工程
-# 特徵重要性
+# 特徵篩選
 data_x = data.drop(columns=["DefectStatus", "SafetyIncidents"])
 data_y = data["DefectStatus"]
 model = xgb.XGBClassifier()
 model.fit(data_x, data_y)
 import_features = pd.DataFrame(
     {"Feature": data_x.columns, "Importance": model.feature_importances_})
-# print(import_features)
+print(import_features.sort_values("Importance", ascending=False))
 
 # 前處理
 x_train, x_test, y_train, y_test = train_test_split(
@@ -205,8 +174,7 @@ shap_values = explainer(x_train)
 # 模型泛化能力
 scores = cross_val_score(model, x_valid,
                          y_valid, cv=10, scoring="roc_auc")
-print("CV準確度=", round((scores.mean())*100, 1),
-      "%")  # logistic=85.4%, SVM=83.8%, XGB=90.5%, XGB優化=92.4%
+# print("CV準確度=", round((scores.mean())*100, 1),"%")  # logistic=85.4%, SVM=83.8%, XGB=90.5%, XGB優化=92.4%
 
 # 模型測試
 y_pred = model.predict(x_test)
@@ -217,16 +185,16 @@ cm = confusion_matrix(y_test, y_pred)
 # 指標分數
 # accuracy
 accuracy = round(accuracy_score(y_test, y_pred)*100, 1)
-print(f"accuracy score={accuracy}")  # logistic=84.3, XGB=94.8, XGB優化=95.1
+print(f"accuracy score={accuracy}")  # logistic=84.3, XGB=94.8, XGB優化=95.3
 # precision
 precision = round(precision_score(y_test, y_pred)*100, 1)
 print(f"precision score={precision}")  # logistic=85.9, XGB=95.5, XGB優化=95.4
 # recall_score
 recall = round(recall_score(y_test, y_pred)*100, 1)
-print(f"recall score={recall}")  # logistic=97.3 , XGB=98.5, XGB優化=99.0
+print(f"recall score={recall}")  # logistic=97.3 , XGB=98.5, XGB優化=99.2
 # f1_score
 f1 = round(f1_score(y_test, y_pred)*100, 1)
-print(f"f1 score={f1}")  # logistic=91.2 , XGB=97.0, XGB優化=97.2
+print(f"f1 score={f1}")  # logistic=91.2 , XGB=97.0, XGB優化=97.3
 # auc_score
 roc_auc = round(roc_auc_score(y_test, y_pred_prob)*100, 1)
 print(f"auc score={roc_auc}")  # logistic=77.7, XGB=84.7, XGB優化=85.6
@@ -242,6 +210,6 @@ print(f"auc score={roc_auc}")  # logistic=77.7, XGB=84.7, XGB優化=85.6
 # plt.show()
 
 # 結果分析
-# 因數據分布不均，所以先看recall跟f1_score，假設公司可能希望盡量抓出高缺陷避免漏掉，可看recall=99.0
+# 因數據分布不均，所以先看recall跟f1_score，假設公司可能希望盡量抓出高缺陷避免漏掉，可看recall=99.2
 # CV準確率達90%以上，模型具有穩定性
 # auc score表現良好=對於正負類預測良好
